@@ -1,7 +1,5 @@
 #import "react-native-leveldb.h"
 
-//#include <jni.h>
-//#include <android/log.h>
 #include <iostream>
 #include <sstream>
 #import <leveldb/db.h>
@@ -9,21 +7,6 @@
 
 using namespace facebook;
 
-
-/**
- * To log a message:
-namespace
-{
-    void log(const char *str)
-    {
-      __android_log_print(ANDROID_LOG_VERBOSE, "JSITest", "%s", str);
-    }
-}
-
-      std::ostringstream message;
-      message << "Putting KV " << key.ToString() << ":" << value.ToString();
-      log(message.str().c_str());
- */
 
 // TODO(savv): consider re-using unique_ptrs, if they are empty.
 std::vector<std::unique_ptr<leveldb::DB>> dbs;
@@ -73,13 +56,10 @@ leveldb::Iterator* valueToIterator(const jsi::Value& value) {
   return iterators[idx].get();
 }
 
-//extern "C" JNIEXPORT void JNICALL Java_com_reactnativeleveldb_LeveldbModule_initialize(JNIEnv* env, jclass clazz, jlong jsiPtr) {
-//  installLeveldb(*reinterpret_cast<facebook::jsi::Runtime*>(jsiPtr));
-//}
-
 std::string documentDir;
 
 void installLeveldb(jsi::Runtime& jsiRuntime, std::string _documentDir) {
+  jsi::Function arrayBufferCtor = jsiRuntime.global().getPropertyAsFunction(jsiRuntime, "ArrayBuffer");
   documentDir = _documentDir;
 
   std::cout << "Initializing react-native-leveldb with document dir " << documentDir;
@@ -293,18 +273,21 @@ void installLeveldb(jsi::Runtime& jsiRuntime, std::string _documentDir) {
   );
   jsiRuntime.global().setProperty(jsiRuntime, "leveldbGetStr", std::move(leveldbGetStr));
 
-#ifdef WITH_BUF
   auto leveldbIteratorKeyBuf = jsi::Function::createFromHostFunction(
       jsiRuntime,
       jsi::PropNameID::forAscii(jsiRuntime, "leveldbIteratorKeyBuf"),
       1,  // iterators index
-      [](jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
+      [&](jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
         leveldb::Iterator* iterator = valueToIterator(arguments[0]);
         if (!iterator) {
           return jsi::Value(-1);
         }
-        std::string buf = iterator->key().ToString();
-        return jsi::Value(jsi::ArrayBuffer::createFromBytes(runtime, buf.c_str(), buf.size()));;
+        std::string key = iterator->key().ToString();
+
+        jsi::Object o = arrayBufferCtor.callAsConstructor(runtime, (int)key.length()).getObject(runtime);
+        jsi::ArrayBuffer buf = o.getArrayBuffer(runtime);
+        memcpy(buf.data(runtime), key.c_str(), key.size());
+        return o;
       }
   );
   jsiRuntime.global().setProperty(jsiRuntime, "leveldbIteratorKeyBuf", std::move(leveldbIteratorKeyBuf));
@@ -313,13 +296,17 @@ void installLeveldb(jsi::Runtime& jsiRuntime, std::string _documentDir) {
       jsiRuntime,
       jsi::PropNameID::forAscii(jsiRuntime, "leveldbIteratorValueBuf"),
       1,  // iterators index
-      [](jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
+      [&](jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
         leveldb::Iterator* iterator = valueToIterator(arguments[0]);
         if (!iterator) {
           return jsi::Value(-1);
         }
-        std::string buf = iterator->value().ToString();
-        return jsi::Value(jsi::ArrayBuffer::createFromBytes(runtime, buf.c_str(), buf.size()));;
+        std::string value = iterator->value().ToString();
+
+        jsi::Object o = arrayBufferCtor.callAsConstructor(runtime, (int)value.length()).getObject(runtime);
+        jsi::ArrayBuffer buf = o.getArrayBuffer(runtime);
+        memcpy(buf.data(runtime), value.c_str(), value.size());
+        return o;
       }
   );
   jsiRuntime.global().setProperty(jsiRuntime, "leveldbIteratorValueBuf", std::move(leveldbIteratorValueBuf));
@@ -328,7 +315,7 @@ void installLeveldb(jsi::Runtime& jsiRuntime, std::string _documentDir) {
       jsiRuntime,
       jsi::PropNameID::forAscii(jsiRuntime, "leveldbGetBuf"),
       2,  // dbs index, key
-      [](jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
+      [&](jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
         leveldb::Slice key;
         leveldb::DB* db = valueToDb(arguments[0]);
 
@@ -337,9 +324,11 @@ void installLeveldb(jsi::Runtime& jsiRuntime, std::string _documentDir) {
         if (!status.ok()) {
           return jsi::Value(-2);
         }
-        return jsi::Value(jsi::ArrayBuffer::createFromBytes(runtime, value.c_str(), value.size()));;
+        jsi::Object o = arrayBufferCtor.callAsConstructor(runtime, (int)value.length()).getObject(runtime);
+        jsi::ArrayBuffer buf = o.getArrayBuffer(runtime);
+        memcpy(buf.data(runtime), value.c_str(), value.size());
+        return o;
       }
   );
   jsiRuntime.global().setProperty(jsiRuntime, "leveldbGetBuf", std::move(leveldbGetBuf));
-#endif
 }
