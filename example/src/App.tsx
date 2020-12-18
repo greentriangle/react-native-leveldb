@@ -1,20 +1,17 @@
 import * as React from 'react';
+import { StyleSheet, View, TextInput } from 'react-native';
+import { LevelDB } from 'react-native-leveldb';
 
-import { StyleSheet, View, Text } from 'react-native';
-import Leveldb from 'react-native-leveldb';
+export default class App extends React.Component {
+  private db: LevelDB = new LevelDB('test.db', true, false);
 
-export default function App() {
-  const [result, setResult] = React.useState<number | undefined>();
-
-  React.useEffect(() => {
-    Leveldb.multiply(3, 7).then(setResult);
-  }, []);
-
-  return (
-    <View style={styles.container}>
-      <Text>Result: {result}</Text>
-    </View>
-  );
+  render() {
+    return (
+      <View style={styles.container}>
+        <TextInput />
+      </View>
+    );
+  }
 }
 
 const styles = StyleSheet.create({
@@ -22,10 +19,5 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  box: {
-    width: 60,
-    height: 60,
-    marginVertical: 20,
   },
 });
