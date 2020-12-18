@@ -1,8 +1,13 @@
 #include <jni.h>
-#include "example.h"
+#include "react-native-leveldb.h"
+#include <android/log.h>
 
 extern "C"
-JNIEXPORT jint JNICALL
-Java_com_reactnativeleveldb_LeveldbModule_nativeMultiply(JNIEnv *env, jclass type, jint a, jint b) {
-    return example::multiply(a, b);
+JNIEXPORT void JNICALL
+Java_com_reactnativeleveldb_LeveldbModule_initialize(JNIEnv* env, jclass clazz, jlong jsiPtr, jstring docDir) {
+  const char *cstr = env->GetStringUTFChars(docDir, NULL);
+  std::string str = std::string(cstr);
+  env->ReleaseStringUTFChars(docDir, cstr);
+  __android_log_print(ANDROID_LOG_VERBOSE, "react-native-leveldb", "Initializing react-native-leveldb with document dir %s", str.c_str());
+  installLeveldb(*reinterpret_cast<facebook::jsi::Runtime*>(jsiPtr), std::string(str));
 }
