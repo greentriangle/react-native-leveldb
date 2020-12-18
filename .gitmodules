@@ -1,0 +1,3 @@
+[submodule "cpp/leveldb"]
+	path = cpp/leveldb
+	url = https://github.com/google/leveldb.git
