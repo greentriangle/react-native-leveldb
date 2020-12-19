@@ -1,14 +1,32 @@
 import * as React from 'react';
-import { StyleSheet, View, TextInput } from 'react-native';
-import { LevelDB } from 'react-native-leveldb';
+import {StyleSheet, View} from 'react-native';
+import {benchmarkAsyncStorage, benchmarkLeveldb, BenchmarkResults, BenchmarkResultsView} from "./benchmark";
 
-export default class App extends React.Component {
-  private db: LevelDB = new LevelDB('test.db', true, false);
+interface BenchmarkState {
+  leveldb?: BenchmarkResults;
+  asyncStorage?: BenchmarkResults;
+}
+
+export default class App extends React.Component<{}, BenchmarkState> {
+  state = {} as BenchmarkState;
+
+  componentDidMount() {
+    try {
+      this.setState({
+        leveldb: benchmarkLeveldb()
+      });
+
+      benchmarkAsyncStorage().then(res => this.setState({asyncStorage: res}));
+    } catch (e) {
+      console.error('Error running benchmark:', e);
+    }
+  }
 
   render() {
     return (
       <View style={styles.container}>
-        <TextInput />
+        {this.state.leveldb && <BenchmarkResultsView title="LevelDB" {...this.state.leveldb} />}
+        {this.state.asyncStorage && <BenchmarkResultsView title="AsyncStorage" {...this.state.asyncStorage} />}
       </View>
     );
   }
@@ -17,7 +35,6 @@ export default class App extends React.Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
     justifyContent: 'center',
   },
 });

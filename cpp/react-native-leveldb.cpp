@@ -58,7 +58,10 @@ leveldb::Iterator* valueToIterator(const jsi::Value& value) {
 
 
 void installLeveldb(jsi::Runtime& jsiRuntime, std::string documentDir) {
-  std::cout << "Initializing react-native-leveldb with document dir " << documentDir;
+  if (documentDir[documentDir.length() - 1] != '/') {
+    documentDir += '/';
+  }
+  std::cout << "Initializing react-native-leveldb with document dir \"" << documentDir << "\"" << "\n";
 
   auto leveldbOpen = jsi::Function::createFromHostFunction(
       jsiRuntime,

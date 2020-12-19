@@ -17,22 +17,28 @@ export class LevelDBIterator {
     }
   }
 
-  seekToFirst(): void {
+  seekToFirst(): LevelDBIterator {
     if (isBadResult(g.leveldbIteratorSeekToFirst(this.ref))) {
       throw new Error('LevelDBIterator error');
     }
+
+    return this;
   }
 
-  seekLast(): void {
+  seekLast(): LevelDBIterator {
     if (isBadResult(g.leveldbIteratorSeekToLast(this.ref))) {
       throw new Error('LevelDBIterator error');
     }
+
+    return this;
   }
 
-  seek(target: ArrayBuffer | string): void {
+  seek(target: ArrayBuffer | string): LevelDBIterator {
     if (isBadResult(g.leveldbIteratorSeek(this.ref, target))) {
       throw new Error('LevelDBIterator error');
     }
+
+    return this;
   }
 
   valid(): boolean {
@@ -87,10 +93,22 @@ export class LevelDBIterator {
 }
 
 export class LevelDB {
+  // Keep references to already open DBs here to facilitate RN's edit-refresh flow.
+  // Note that when editing this file, this won't work, as RN will reload it and the openPathRefs
+  // will be lost.
+  private static openPathRefs: {[name: string]: number} = {};
   private ref: number;
 
   constructor(name: string, createIfMissing: boolean, errorIfExists: boolean) {
-    this.ref = g.leveldbOpen(name, createIfMissing, errorIfExists);
+    if (LevelDB.openPathRefs[name] !== undefined) {
+      this.ref = LevelDB.openPathRefs[name];
+    } else {
+      this.ref = g.leveldbOpen(name, createIfMissing, errorIfExists);
+      if (!isBadResult(this.ref)) {
+        LevelDB.openPathRefs[name] = this.ref;
+      }
+    }
+
     if (isBadResult(this.ref)) {
       if (this.ref == -1) {
         throw new Error(
