@@ -56,19 +56,15 @@ leveldb::Iterator* valueToIterator(const jsi::Value& value) {
   return iterators[idx].get();
 }
 
-std::string documentDir;
 
-void installLeveldb(jsi::Runtime& jsiRuntime, std::string _documentDir) {
-  jsi::Function arrayBufferCtor = jsiRuntime.global().getPropertyAsFunction(jsiRuntime, "ArrayBuffer");
-  documentDir = _documentDir;
-
+void installLeveldb(jsi::Runtime& jsiRuntime, std::string documentDir) {
   std::cout << "Initializing react-native-leveldb with document dir " << documentDir;
 
   auto leveldbOpen = jsi::Function::createFromHostFunction(
       jsiRuntime,
       jsi::PropNameID::forAscii(jsiRuntime, "leveldbOpen"),
       3,  // db path, create_if_missing, error_if_exists
-      [](jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
+      [documentDir](jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
         if (!arguments[0].isString() || !arguments[1].isBool() || !arguments[2].isBool()) {
           return jsi::Value(-1);
         }
@@ -277,13 +273,14 @@ void installLeveldb(jsi::Runtime& jsiRuntime, std::string _documentDir) {
       jsiRuntime,
       jsi::PropNameID::forAscii(jsiRuntime, "leveldbIteratorKeyBuf"),
       1,  // iterators index
-      [&](jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
+      [](jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
         leveldb::Iterator* iterator = valueToIterator(arguments[0]);
         if (!iterator) {
           return jsi::Value(-1);
         }
         std::string key = iterator->key().ToString();
 
+        jsi::Function arrayBufferCtor = runtime.global().getPropertyAsFunction(runtime, "ArrayBuffer");
         jsi::Object o = arrayBufferCtor.callAsConstructor(runtime, (int)key.length()).getObject(runtime);
         jsi::ArrayBuffer buf = o.getArrayBuffer(runtime);
         memcpy(buf.data(runtime), key.c_str(), key.size());
@@ -296,13 +293,14 @@ void installLeveldb(jsi::Runtime& jsiRuntime, std::string _documentDir) {
       jsiRuntime,
       jsi::PropNameID::forAscii(jsiRuntime, "leveldbIteratorValueBuf"),
       1,  // iterators index
-      [&](jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
+      [](jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
         leveldb::Iterator* iterator = valueToIterator(arguments[0]);
         if (!iterator) {
           return jsi::Value(-1);
         }
         std::string value = iterator->value().ToString();
 
+        jsi::Function arrayBufferCtor = runtime.global().getPropertyAsFunction(runtime, "ArrayBuffer");
         jsi::Object o = arrayBufferCtor.callAsConstructor(runtime, (int)value.length()).getObject(runtime);
         jsi::ArrayBuffer buf = o.getArrayBuffer(runtime);
         memcpy(buf.data(runtime), value.c_str(), value.size());
@@ -315,7 +313,7 @@ void installLeveldb(jsi::Runtime& jsiRuntime, std::string _documentDir) {
       jsiRuntime,
       jsi::PropNameID::forAscii(jsiRuntime, "leveldbGetBuf"),
       2,  // dbs index, key
-      [&](jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
+      [](jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
         leveldb::Slice key;
         leveldb::DB* db = valueToDb(arguments[0]);
 
@@ -324,6 +322,8 @@ void installLeveldb(jsi::Runtime& jsiRuntime, std::string _documentDir) {
         if (!status.ok()) {
           return jsi::Value(-2);
         }
+
+        jsi::Function arrayBufferCtor = runtime.global().getPropertyAsFunction(runtime, "ArrayBuffer");
         jsi::Object o = arrayBufferCtor.callAsConstructor(runtime, (int)value.length()).getObject(runtime);
         jsi::ArrayBuffer buf = o.getArrayBuffer(runtime);
         memcpy(buf.data(runtime), value.c_str(), value.size());
