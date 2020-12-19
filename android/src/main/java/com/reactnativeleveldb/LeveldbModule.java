@@ -12,6 +12,7 @@ class LeveldbModule extends ReactContextBaseJavaModule {
   }
 
   private static native void initialize(long jsiPtr, String docDir);
+  private static native void destruct();
 
   public LeveldbModule(ReactApplicationContext reactContext) {
     super(reactContext);
@@ -28,7 +29,12 @@ class LeveldbModule extends ReactContextBaseJavaModule {
     super.initialize();
 
     LeveldbModule.initialize(
-    this.getReactApplicationContext().getJavaScriptContextHolder().get(),
-    this.getReactApplicationContext().getFilesDir().getAbsolutePath());
+      this.getReactApplicationContext().getJavaScriptContextHolder().get(),
+      this.getReactApplicationContext().getFilesDir().getAbsolutePath());
+  }
+
+  @Override
+  public void onCatalystInstanceDestroy() {
+    LeveldbModule.destruct();
   }
 }

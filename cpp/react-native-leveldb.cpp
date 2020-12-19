@@ -332,3 +332,8 @@ void installLeveldb(jsi::Runtime& jsiRuntime, std::string _documentDir) {
   );
   jsiRuntime.global().setProperty(jsiRuntime, "leveldbGetBuf", std::move(leveldbGetBuf));
 }
+
+void cleanupLeveldb() {
+  dbs.clear();
+  iterators.clear();
+}

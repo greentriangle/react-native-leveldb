@@ -27,5 +27,9 @@ RCT_EXPORT_MODULE()
     installLeveldb(*(facebook::jsi::Runtime *)cxxBridge.runtime, std::string([[docPath path] UTF8String]));
 }
 
+- (void)invalidate {
+  cleanupLeveldb();
+}
+
 
 @end
