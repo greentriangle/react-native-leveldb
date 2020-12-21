@@ -3,7 +3,7 @@ Sponsored by ![GreenTriangle](https://www.green-triangle.com/wp-content/uploads/
 
 Superfast React Native bindings for LevelDB:
 * 2-7x faster than AsyncStorage or react-native-sqlite-storage - try the benchmarks under example/!
-* completely synchronous, blocking API (even on slow devides, a single read or write takes 0.1ms)
+* completely synchronous, blocking API (even on slow devices, a single read or write takes 0.1ms)
 * use it with Flatbuffers to turbo charge your app - support for binary data via ArrayBuffers 
 
 ## Installation
