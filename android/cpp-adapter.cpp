@@ -12,6 +12,8 @@ Java_com_reactnativeleveldb_LeveldbModule_initialize(JNIEnv* env, jclass clazz, 
   installLeveldb(*reinterpret_cast<facebook::jsi::Runtime*>(jsiPtr), std::string(str));
 }
 
+extern "C"
+JNIEXPORT void JNICALL
 Java_com_reactnativeleveldb_LeveldbModule_destruct(JNIEnv* env, jclass clazz) {
   cleanupLeveldb();
 }
