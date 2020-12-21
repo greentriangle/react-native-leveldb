@@ -1,6 +1,6 @@
 {
   "name": "react-native-leveldb",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Superfast React Native bindings for LevelDB",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -21,7 +21,9 @@
     "!ios/build",
     "!**/__tests__",
     "!**/__fixtures__",
-    "!**/__mocks__"
+    "!**/__mocks__",
+    "!**/.DS_Store",
+    "!**/*savv*"
   ],
   "scripts": {
     "test": "jest",
