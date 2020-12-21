@@ -1,16 +1,3 @@
-# react-native-leveldb
-
-Superfast React Native bindings for LevelDB
-
-## Installation
-
-```sh
-yarn add react-native-leveldb
-```
-
-## Usage
-
-```ts
 import {LevelDB} from "react-native-leveldb";
 
 export function leveldbExample(): boolean {
@@ -48,12 +35,3 @@ export function leveldbExample(): boolean {
 
   return readStringValue == 'value' && readBufferValue.length == 1 && readBufferValue[0] == 654321;
 }
-```
-
-## Contributing
-
-See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the repository and the development workflow.
-
-## License
-
-MIT

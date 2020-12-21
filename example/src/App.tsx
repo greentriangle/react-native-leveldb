@@ -1,9 +1,16 @@
 import * as React from 'react';
-import {StyleSheet, View} from 'react-native';
-import {benchmarkAsyncStorage, benchmarkLeveldb, BenchmarkResults, BenchmarkResultsView} from "./benchmark";
+import {StyleSheet, View, Text} from 'react-native';
+import {
+  benchmarkAsyncStorage,
+  benchmarkLeveldb,
+  BenchmarkResults,
+  BenchmarkResultsView
+} from "./benchmark";
+import {leveldbExample} from "./example";
 
 interface BenchmarkState {
   leveldb?: BenchmarkResults;
+  leveldbExample?: boolean;
   asyncStorage?: BenchmarkResults;
 }
 
@@ -13,7 +20,8 @@ export default class App extends React.Component<{}, BenchmarkState> {
   componentDidMount() {
     try {
       this.setState({
-        leveldb: benchmarkLeveldb()
+        leveldb: benchmarkLeveldb(),
+        leveldbExample: leveldbExample(),
       });
 
       benchmarkAsyncStorage().then(res => this.setState({asyncStorage: res}));
@@ -25,6 +33,7 @@ export default class App extends React.Component<{}, BenchmarkState> {
   render() {
     return (
       <View style={styles.container}>
+        <Text>Example validity: {this.state.leveldbExample == undefined ? '' : this.state.leveldbExample ? 'passed' : 'failed'}</Text>
         {this.state.leveldb && <BenchmarkResultsView title="LevelDB" {...this.state.leveldb} />}
         {this.state.asyncStorage && <BenchmarkResultsView title="AsyncStorage" {...this.state.asyncStorage} />}
       </View>

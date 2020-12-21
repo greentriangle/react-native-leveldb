@@ -13,9 +13,9 @@ std::vector<std::unique_ptr<leveldb::DB>> dbs;
 std::vector<std::unique_ptr<leveldb::Iterator>> iterators;
 
 // Returns false if the passed value is not a string or an ArrayBuffer.
-bool valueToSlice(jsi::Runtime& runtime, const jsi::Value& value, leveldb::Slice* slice) {
+bool valueToString(jsi::Runtime& runtime, const jsi::Value& value, std::string* str) {
   if (value.isString()) {
-    *slice = leveldb::Slice(value.asString(runtime).utf8(runtime));
+    *str = value.asString(runtime).utf8(runtime);
     return true;
   }
 
@@ -25,7 +25,7 @@ bool valueToSlice(jsi::Runtime& runtime, const jsi::Value& value, leveldb::Slice
       return false;
     }
     auto buf = obj.getArrayBuffer(runtime);
-    *slice = leveldb::Slice((char*)buf.data(runtime), buf.size(runtime));
+    *str = std::string((char*)buf.data(runtime), buf.size(runtime));
     return true;
   }
 
@@ -115,9 +115,9 @@ void installLeveldb(jsi::Runtime& jsiRuntime, std::string documentDir) {
       jsi::PropNameID::forAscii(jsiRuntime, "leveldbPut"),
       3,  // dbs index, key, value
       [](jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
-        leveldb::Slice key, value;
+        std::string key, value;
         leveldb::DB* db = valueToDb(arguments[0]);
-        if (!db || !valueToSlice(runtime, arguments[1], &key) || !valueToSlice(runtime, arguments[2], &value)) {
+        if (!db || !valueToString(runtime, arguments[1], &key) || !valueToString(runtime, arguments[2], &value)) {
           return jsi::Value(-1);
         }
 
@@ -187,11 +187,11 @@ void installLeveldb(jsi::Runtime& jsiRuntime, std::string documentDir) {
           return jsi::Value(-1);
         }
 
-        leveldb::Slice slice;
-        if (!valueToSlice(runtime, arguments[1], &slice)) {
+        std::string target;
+        if (!valueToString(runtime, arguments[1], &target)) {
           return jsi::Value(-1);
         }
-        iterator->Seek(slice);
+        iterator->Seek(target);
         return nullptr;
       }
   );
@@ -226,6 +226,21 @@ void installLeveldb(jsi::Runtime& jsiRuntime, std::string documentDir) {
   );
   jsiRuntime.global().setProperty(jsiRuntime, "leveldbIteratorNext", std::move(leveldbIteratorNext));
 
+  auto leveldbIteratorDelete = jsi::Function::createFromHostFunction(
+      jsiRuntime,
+      jsi::PropNameID::forAscii(jsiRuntime, "leveldbIteratorDelete"),
+      1,  // iterators index
+      [](jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
+        leveldb::Iterator* iterator = valueToIterator(arguments[0]);
+        if (!iterator) {
+          return jsi::Value(-1);
+        }
+        iterators[(int)arguments[0].getNumber()].release();
+        return nullptr;
+      }
+  );
+  jsiRuntime.global().setProperty(jsiRuntime, "leveldbIteratorDelete", std::move(leveldbIteratorDelete));
+
   auto leveldbIteratorKeyStr = jsi::Function::createFromHostFunction(
       jsiRuntime,
       jsi::PropNameID::forAscii(jsiRuntime, "leveldbIteratorKeyStr"),
@@ -259,8 +274,9 @@ void installLeveldb(jsi::Runtime& jsiRuntime, std::string documentDir) {
       jsi::PropNameID::forAscii(jsiRuntime, "leveldbGetStr"),
       2,  // dbs index, key
       [](jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
-        leveldb::Slice key;
         leveldb::DB* db = valueToDb(arguments[0]);
+        std::string key;
+        valueToString(runtime, arguments[1], &key);
 
         std::string value;
         auto status = db->Get(leveldb::ReadOptions(), key, &value);
@@ -317,8 +333,9 @@ void installLeveldb(jsi::Runtime& jsiRuntime, std::string documentDir) {
       jsi::PropNameID::forAscii(jsiRuntime, "leveldbGetBuf"),
       2,  // dbs index, key
       [](jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
-        leveldb::Slice key;
         leveldb::DB* db = valueToDb(arguments[0]);
+        std::string key;
+        valueToString(runtime, arguments[1], &key);
 
         std::string value;
         auto status = db->Get(leveldb::ReadOptions(), key, &value);

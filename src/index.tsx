@@ -55,6 +55,14 @@ export class LevelDBIterator {
     }
   }
 
+  close() {
+    if (isBadResult(g.leveldbIteratorDelete(this.ref))) {
+      throw new Error('LevelDBIterator error');
+    }
+
+    this.ref = -1;
+  }
+
   keyStr(): string {
     const res = g.leveldbIteratorKeyStr(this.ref);
     if (isBadResult(res)) {
@@ -147,18 +155,18 @@ export class LevelDB {
     }
   }
 
-  getStr(k: ArrayBuffer | string, v: ArrayBuffer | string) {
-    const res = g.leveldbGetStr(this.ref, k, v);
+  getStr(k: ArrayBuffer | string) {
+    const res = g.leveldbGetStr(this.ref, k);
     if (isBadResult(res)) {
-      throw new Error('LevelDB: unable to get()');
+      throw new Error(`LevelDB: unable to getStr(): ${res}`);
     }
     return res;
   }
 
-  getBuf(k: ArrayBuffer | string, v: ArrayBuffer | string) {
-    const res = g.leveldbGetBuf(this.ref, k, v);
+  getBuf(k: ArrayBuffer | string) {
+    const res = g.leveldbGetBuf(this.ref, k);
     if (isBadResult(res)) {
-      throw new Error('LevelDB: unable to get()');
+      throw new Error(`LevelDB: unable to getBuf(): ${res}`);
     }
     return res;
   }
