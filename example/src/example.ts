@@ -7,8 +7,9 @@ export function leveldbExample(): boolean {
   const errorIfExists = false;
   const db = new LevelDB(name, createIfMissing, errorIfExists);
 
-  // Insert something into the database. Note that the key and the value can either be
-  // strings or ArrayBuffers. Strings are read & written in utf8.
+  // Insert something into the database. Note that the key and the
+  // value can either be strings or ArrayBuffers.
+  // Strings are read & written in utf8.
   db.put('key', 'value');
 
   // You can also use ArrayBuffers as input, containing binary data.
@@ -19,7 +20,7 @@ export function leveldbExample(): boolean {
   // Get values as string or as an ArrayBuffer (useful for binary data).
   const readStringValue = db.getStr('key');
   const readBufferValue = new Uint32Array(db.getBuf(key.buffer));
-  console.log(readStringValue, readBufferValue);  // should log: value [654321]
+  console.log(readStringValue, readBufferValue);  // logs: value [654321]
 
   // Iterate over a range of values (here, from key "key" to the end.)
   let iter = db.newIterator();
@@ -28,10 +29,12 @@ export function leveldbExample(): boolean {
     console.log(`iterating: "${iter.keyStr()}" / "${iter.valueStr()}"`);
   }
 
-  // You need to close iterators when you are done with them. Iterators will throw an error if used after this.
+  // You need to close iterators when you are done with them.
+  // Iterators will throw an error if used after this.
   iter.close();
 
   db.close();  // Same for databases.
 
-  return readStringValue == 'value' && readBufferValue.length == 1 && readBufferValue[0] == 654321;
+  return readStringValue == 'value' &&
+    readBufferValue.length == 1 && readBufferValue[0] == 654321;
 }
