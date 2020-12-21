@@ -38,13 +38,13 @@
     "ios",
     "android"
   ],
-  "repository": "https://github.com/savv/react-native-leveldb",
+  "repository": "https://github.com/greentriangle/react-native-leveldb",
   "author": "Chris Savvopoulos <savvopoulos@gmail.com> (https://github.com/savv)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/savv/react-native-leveldb/issues"
+    "url": "https://github.com/greentriangle/react-native-leveldb/issues"
   },
-  "homepage": "https://github.com/savv/react-native-leveldb#readme",
+  "homepage": "https://github.com/greentriangle/react-native-leveldb#readme",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
