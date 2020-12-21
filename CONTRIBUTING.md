@@ -8,6 +8,9 @@ To get started with the project, run `yarn` in the root directory to install the
 
 ```sh
 yarn
+
+# You will also need to download leveldb.
+git submodule update --init --recursive
 ```
 
 While developing, you can run the [example app](/example/) to test your changes.
