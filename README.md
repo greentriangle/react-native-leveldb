@@ -10,6 +10,7 @@ Superfast React Native bindings for LevelDB:
 
 ```sh
 yarn add react-native-leveldb
+cd ios && pod install
 ```
 
 ## Usage
