@@ -21,16 +21,16 @@ To start the packager:
 yarn example start
 ```
 
-To run the example app on Android:
-
-```sh
-yarn example android
-```
-
 To run the example app on iOS:
 
 ```sh
 yarn example ios
+```
+
+Currently, the Android example doesn't work out of the box, due to the following issue: https://github.com/callstack/react-native-builder-bob/issues/131 Try reverting this commit to run it there: https://github.com/greentriangle/react-native-leveldb/commit/2b54ef96b7461213e929d5e478749c813650fa3a To run the example app on Android:
+
+```sh
+yarn example android
 ```
 
 Make sure your code passes TypeScript and ESLint. Run the following to verify:
