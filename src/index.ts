@@ -55,6 +55,12 @@ export class LevelDBIterator {
     }
   }
 
+  prev(): void {
+    if (isBadResult(g.leveldbIteratorPrev(this.ref))) {
+      throw new Error('LevelDBIterator error');
+    }
+  }
+
   close() {
     if (isBadResult(g.leveldbIteratorDelete(this.ref))) {
       throw new Error('LevelDBIterator error');
@@ -104,7 +110,7 @@ export class LevelDB {
   // Keep references to already open DBs here to facilitate RN's edit-refresh flow.
   // Note that when editing this file, this won't work, as RN will reload it and the openPathRefs
   // will be lost.
-  private static openPathRefs: {[name: string]: number} = {};
+  private static openPathRefs: { [name: string]: number } = {};
   private ref: number;
 
   constructor(name: string, createIfMissing: boolean, errorIfExists: boolean) {
@@ -121,7 +127,7 @@ export class LevelDB {
       if (this.ref == -1) {
         throw new Error(
           `Unable to open LevelDB; invalid constructor arguments: ` +
-            `name=${name} createIfMissing=${createIfMissing} errorIfExists=${errorIfExists} `
+          `name=${name} createIfMissing=${createIfMissing} errorIfExists=${errorIfExists} `
         );
       }
       if (this.ref == -2) {
@@ -155,6 +161,12 @@ export class LevelDB {
     }
   }
 
+  delete(k: ArrayBuffer | string) {
+    if (isBadResult(g.leveldbPut(this.ref, k))) {
+      throw new Error('LevelDB: unable to delete()');
+    }
+  }
+
   getStr(k: ArrayBuffer | string) {
     const res = g.leveldbGetStr(this.ref, k);
     if (isBadResult(res)) {
@@ -173,5 +185,15 @@ export class LevelDB {
 
   newIterator(): LevelDBIterator {
     return new LevelDBIterator(this.ref);
+  }
+
+  static destroyDB(name: string) {
+    if (LevelDB.openPathRefs[name] !== undefined) {
+      throw new Error('DB is open! Cannot destroy');
+    } else {
+      if (isBadResult(g.leveldbDestroy(name))) {
+        throw new Error('Error destroying LevelDB ' + name);
+      }
+    }
   }
 }

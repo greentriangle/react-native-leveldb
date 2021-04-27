@@ -82,7 +82,7 @@ void installLeveldb(jsi::Runtime& jsiRuntime, std::string documentDir) {
         int idx = (int)dbs.size() - 1;
 
         if (!status.ok()) {
-          dbs[idx].release();
+          dbs[idx].reset();
           return jsi::Value(-2);
         }
 
@@ -90,6 +90,23 @@ void installLeveldb(jsi::Runtime& jsiRuntime, std::string documentDir) {
       }
   );
   jsiRuntime.global().setProperty(jsiRuntime, "leveldbOpen", std::move(leveldbOpen));
+
+  auto leveldbDestroy = jsi::Function::createFromHostFunction(
+      jsiRuntime,
+      jsi::PropNameID::forAscii(jsiRuntime, "leveldbDestroy"),
+      1,  // db path
+      [documentDir](jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
+        if (!arguments[0].isString()) {
+          return jsi::Value(-1);
+        }
+
+        leveldb::Options options;
+        std::string path = documentDir + arguments[0].getString(runtime).utf8(runtime);
+        leveldb::Status status = leveldb::DestroyDB(path, options);
+        return jsi::Value(status.ok() ? 0 : -2);
+      }
+  );
+  jsiRuntime.global().setProperty(jsiRuntime, "leveldbDestroy", std::move(leveldbDestroy));
 
   auto leveldbClose = jsi::Function::createFromHostFunction(
       jsiRuntime,
@@ -104,7 +121,7 @@ void installLeveldb(jsi::Runtime& jsiRuntime, std::string documentDir) {
           return jsi::Value(-3);
         }
 
-        dbs[idx].release();
+        dbs[idx].reset();
         return nullptr;
       }
   );
@@ -131,6 +148,28 @@ void installLeveldb(jsi::Runtime& jsiRuntime, std::string documentDir) {
       }
   );
   jsiRuntime.global().setProperty(jsiRuntime, "leveldbPut", std::move(leveldbPut));
+
+  auto leveldbDelete = jsi::Function::createFromHostFunction(
+      jsiRuntime,
+      jsi::PropNameID::forAscii(jsiRuntime, "leveldbDelete"),
+      2,  // dbs index, key
+      [](jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
+        std::string key;
+        leveldb::DB* db = valueToDb(arguments[0]);
+        if (!db || !valueToString(runtime, arguments[1], &key)) {
+          return jsi::Value(-1);
+        }
+
+        auto status = db->Delete(leveldb::WriteOptions(), key);
+
+        if (!status.ok()) {
+          return jsi::Value(-2);
+        }
+
+        return jsi::Value(0);
+      }
+  );
+  jsiRuntime.global().setProperty(jsiRuntime, "leveldbDelete", std::move(leveldbDelete));
 
   auto leveldbNewIterator = jsi::Function::createFromHostFunction(
       jsiRuntime,
@@ -211,6 +250,21 @@ void installLeveldb(jsi::Runtime& jsiRuntime, std::string documentDir) {
   );
   jsiRuntime.global().setProperty(jsiRuntime, "leveldbIteratorValid", std::move(leveldbIteratorValid));
 
+  auto leveldbIteratorPrev = jsi::Function::createFromHostFunction(
+      jsiRuntime,
+      jsi::PropNameID::forAscii(jsiRuntime, "leveldbIteratorPrev"),
+      1,  // iterators index
+      [](jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
+        leveldb::Iterator* iterator = valueToIterator(arguments[0]);
+        if (!iterator) {
+          return jsi::Value(-1);
+        }
+        iterator->Prev();
+        return nullptr;
+      }
+  );
+  jsiRuntime.global().setProperty(jsiRuntime, "leveldbIteratorPrev", std::move(leveldbIteratorPrev));
+
   auto leveldbIteratorNext = jsi::Function::createFromHostFunction(
       jsiRuntime,
       jsi::PropNameID::forAscii(jsiRuntime, "leveldbIteratorNext"),
@@ -235,7 +289,7 @@ void installLeveldb(jsi::Runtime& jsiRuntime, std::string documentDir) {
         if (!iterator) {
           return jsi::Value(-1);
         }
-        iterators[(int)arguments[0].getNumber()].release();
+        iterators[(int)arguments[0].getNumber()].reset();
         return nullptr;
       }
   );
@@ -354,6 +408,6 @@ void installLeveldb(jsi::Runtime& jsiRuntime, std::string documentDir) {
 }
 
 void cleanupLeveldb() {
-  dbs.clear();
   iterators.clear();
+  dbs.clear();
 }
