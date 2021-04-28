@@ -36,7 +36,7 @@ db.put(key.buffer, value.buffer);
 
 // Get values as string or as an ArrayBuffer (useful for binary data).
 const readStringValue = db.getStr('key');
-const readBufferValue = new Uint32Array(db.getBuf(key.buffer));
+const readBufferValue = new Uint32Array(db.getBuf(key.buffer)!);
 console.log(readStringValue, readBufferValue);  // logs: value [654321]
 
 // Iterate over a range of values (here, from key "key" to the end.)

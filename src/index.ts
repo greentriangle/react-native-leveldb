@@ -1,189 +1,129 @@
 const g = global as any;
 
-function isBadResult(x: any) {
-  return typeof x === 'number' && x < 0;
+export interface LevelDBIteratorI {
+  seekToFirst(): LevelDBIteratorI;
+  seekLast(): LevelDBIteratorI;
+  seek(target: ArrayBuffer | string): LevelDBIteratorI;
+  valid(): boolean;
+  next(): void;
+  prev(): void;
+  close(): void;
+  keyStr(): string;
+  keyBuf(): ArrayBuffer;
+  valueStr(): string;
+  valueBuf(): ArrayBuffer;
 }
 
-export class LevelDBIterator {
+export interface LevelDBI {
+  close(): void;
+  put(k: ArrayBuffer | string, v: ArrayBuffer | string): void;
+  delete(k: ArrayBuffer | string): void;
+  getStr(k: ArrayBuffer | string): null | string;
+  getBuf(k: ArrayBuffer | string): null | ArrayBuffer;
+  newIterator(): LevelDBIteratorI;
+}
+
+export class LevelDBIterator implements LevelDBIteratorI {
   private ref: number;
 
   constructor(dbRef: number) {
     this.ref = g.leveldbNewIterator(dbRef);
-    if (isBadResult(this.ref)) {
-      if (this.ref == -1) {
-        throw new Error(`Unable to create iterator for LevelDB ${dbRef}`);
-      }
-      throw new Error('Unable to open LevelDB; internal error.');
-    }
   }
 
   seekToFirst(): LevelDBIterator {
-    if (isBadResult(g.leveldbIteratorSeekToFirst(this.ref))) {
-      throw new Error('LevelDBIterator error');
-    }
-
+    g.leveldbIteratorSeekToFirst(this.ref);
     return this;
   }
 
   seekLast(): LevelDBIterator {
-    if (isBadResult(g.leveldbIteratorSeekToLast(this.ref))) {
-      throw new Error('LevelDBIterator error');
-    }
-
+    g.leveldbIteratorSeekToLast(this.ref);
     return this;
   }
 
   seek(target: ArrayBuffer | string): LevelDBIterator {
-    if (isBadResult(g.leveldbIteratorSeek(this.ref, target))) {
-      throw new Error('LevelDBIterator error');
-    }
-
+    g.leveldbIteratorSeek(this.ref, target);
     return this;
   }
 
   valid(): boolean {
-    const res = g.leveldbIteratorValid(this.ref);
-    if (isBadResult(res)) {
-      throw new Error('LevelDBIterator error');
-    }
-    return res;
+    return g.leveldbIteratorValid(this.ref);
   }
 
   next(): void {
-    if (isBadResult(g.leveldbIteratorNext(this.ref))) {
-      throw new Error('LevelDBIterator error');
-    }
+    g.leveldbIteratorNext(this.ref);
   }
 
   prev(): void {
-    if (isBadResult(g.leveldbIteratorPrev(this.ref))) {
-      throw new Error('LevelDBIterator error');
-    }
+    g.leveldbIteratorPrev(this.ref);
   }
 
   close() {
-    if (isBadResult(g.leveldbIteratorDelete(this.ref))) {
-      throw new Error('LevelDBIterator error');
-    }
-
+    g.leveldbIteratorDelete(this.ref);
     this.ref = -1;
   }
 
   keyStr(): string {
-    const res = g.leveldbIteratorKeyStr(this.ref);
-    if (isBadResult(res)) {
-      throw new Error('LevelDBIterator error');
-    }
-
-    return res;
+    return g.leveldbIteratorKeyStr(this.ref);
   }
 
   keyBuf(): ArrayBuffer {
-    const res = g.leveldbIteratorKeyBuf(this.ref);
-    if (isBadResult(res)) {
-      throw new Error('LevelDBIterator error');
-    }
-
-    return res;
+    return g.leveldbIteratorKeyBuf(this.ref);
   }
 
   valueStr(): string {
-    const res = g.leveldbIteratorValueStr(this.ref);
-    if (isBadResult(res)) {
-      throw new Error('LevelDBIterator error');
-    }
-
-    return res;
+    return g.leveldbIteratorValueStr(this.ref);
   }
 
   valueBuf(): ArrayBuffer {
-    const res = g.leveldbIteratorValueBuf(this.ref);
-    if (isBadResult(res)) {
-      throw new Error('LevelDBIterator error');
-    }
-
-    return res;
+    return g.leveldbIteratorValueBuf(this.ref);
   }
 }
 
-export class LevelDB {
+export class LevelDB implements LevelDBI {
   // Keep references to already open DBs here to facilitate RN's edit-refresh flow.
   // Note that when editing this file, this won't work, as RN will reload it and the openPathRefs
   // will be lost.
-  private static openPathRefs: { [name: string]: number } = {};
-  private ref: number;
+  private static openPathRefs: { [name: string]: undefined | number } = {};
+  private ref: undefined | number;
 
   constructor(name: string, createIfMissing: boolean, errorIfExists: boolean) {
     if (LevelDB.openPathRefs[name] !== undefined) {
       this.ref = LevelDB.openPathRefs[name];
     } else {
-      this.ref = g.leveldbOpen(name, createIfMissing, errorIfExists);
-      if (!isBadResult(this.ref)) {
-        LevelDB.openPathRefs[name] = this.ref;
-      }
-    }
-
-    if (isBadResult(this.ref)) {
-      if (this.ref == -1) {
-        throw new Error(
-          `Unable to open LevelDB; invalid constructor arguments: ` +
-          `name=${name} createIfMissing=${createIfMissing} errorIfExists=${errorIfExists} `
-        );
-      }
-      if (this.ref == -2) {
-        throw new Error(
-          'Unable to open LevelDB; internal error. Is the path valid?'
-        );
-      }
-      if (this.ref == -3) {
-        throw new Error(
-          'Unable to use LevelDB; ref was out of bounds or closed'
-        );
-      }
-      if (this.ref == -100) {
-        throw new Error('Unable to use LevelDB; DB has been closed');
-      }
-      throw new Error('Unable to open LevelDB; internal error.');
+      LevelDB.openPathRefs[name] = this.ref = g.leveldbOpen(name, createIfMissing, errorIfExists);
     }
   }
 
   close() {
-    const res = g.leveldbClose(this.ref);
-    if (isBadResult(res)) {
-      throw new Error("Couldn't close LevelDB!");
+    g.leveldbClose(this.ref);
+    for (const name in LevelDB.openPathRefs) {
+      if (LevelDB.openPathRefs[name] === this.ref) {
+        delete LevelDB.openPathRefs[name];
+      }
     }
-    this.ref = -100;
+    this.ref = undefined;
   }
 
   put(k: ArrayBuffer | string, v: ArrayBuffer | string) {
-    if (isBadResult(g.leveldbPut(this.ref, k, v))) {
-      throw new Error('LevelDB: unable to put()');
-    }
+    g.leveldbPut(this.ref, k, v);
   }
 
   delete(k: ArrayBuffer | string) {
-    if (isBadResult(g.leveldbPut(this.ref, k))) {
-      throw new Error('LevelDB: unable to delete()');
-    }
+    g.leveldbPut(this.ref, k);
   }
 
-  getStr(k: ArrayBuffer | string) {
-    const res = g.leveldbGetStr(this.ref, k);
-    if (isBadResult(res)) {
-      throw new Error(`LevelDB: unable to getStr(): ${res}`);
-    }
-    return res;
+  getStr(k: ArrayBuffer | string): null | string {
+    return g.leveldbGetStr(this.ref, k);
   }
 
-  getBuf(k: ArrayBuffer | string) {
-    const res = g.leveldbGetBuf(this.ref, k);
-    if (isBadResult(res)) {
-      throw new Error(`LevelDB: unable to getBuf(): ${res}`);
-    }
-    return res;
+  getBuf(k: ArrayBuffer | string): null | ArrayBuffer {
+    return g.leveldbGetBuf(this.ref, k);
   }
 
   newIterator(): LevelDBIterator {
+    if (this.ref === undefined) {
+      throw new Error('LevelDB.newIterator: could not create iterator, the DB was closed!');
+    }
     return new LevelDBIterator(this.ref);
   }
 
@@ -191,9 +131,7 @@ export class LevelDB {
     if (LevelDB.openPathRefs[name] !== undefined) {
       throw new Error('DB is open! Cannot destroy');
     } else {
-      if (isBadResult(g.leveldbDestroy(name))) {
-        throw new Error('Error destroying LevelDB ' + name);
-      }
+      g.leveldbDestroy(name);
     }
   }
 }
