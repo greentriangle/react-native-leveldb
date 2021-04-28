@@ -1,11 +1,43 @@
 import type {LevelDBI, LevelDBIteratorI} from "./index";
 
+// Return the position at the first key in the source that is at or past `k`.
+function getIdx(kv: null | [ArrayBuffer, ArrayBuffer][], k: ArrayBuffer | string, start?: number, end?: number): number {
+  if (!kv) {
+    throw new Error('FakeLevelDB was closed!');
+  }
+
+  k = toArraybuf(k);
+  start = start || 0;
+  end = end || kv.length;
+
+  const pivot: number = Math.floor(start + (end - start) / 2);
+  if (end - start <= 1) {
+    if (pivot < kv.length && arraybufGt(k, kv[pivot][0])) {
+      return end;
+    } else {
+      return pivot;
+    }
+  }
+  if (!arraybufGt(kv[pivot][0], k) && !arraybufGt(k, kv[pivot][0])) { // equality check, done as the inverse of <>
+    return pivot;
+  }
+  if (arraybufGt(kv[pivot][0], k)) {
+    return getIdx(kv, k, start, pivot);
+  } else {
+    return getIdx(kv, k, pivot, end);
+  }
+}
+
 export class FakeLevelDBIterator implements LevelDBIteratorI {
-  private db: FakeLevelDB;
+  private kv: [ArrayBuffer, ArrayBuffer][];
   private pos: undefined|number;
 
   constructor(db: FakeLevelDB) {
-    this.db = db;
+    if (!db.kv) {
+      throw new Error(`Could't make FakeLevelDBIterator: DB was closed!`);
+    }
+
+    this.kv = [...db.kv];  // This creates a snapshot, like LevelDB would!
     this.pos = undefined;
   }
 
@@ -15,17 +47,17 @@ export class FakeLevelDBIterator implements LevelDBIteratorI {
   }
 
   seekLast(): LevelDBIteratorI {
-    this.pos = this.db.kv!.length - 1;
+    this.pos = this.kv.length - 1;
     return this;
   }
 
   seek(target: ArrayBuffer | string): LevelDBIteratorI {
-    this.pos = this.db.getIdx(target);
+    this.pos = getIdx(this.kv, target);
     return this;
   }
 
   valid(): boolean {
-    return this.pos !== undefined && this.pos >= 0 && this.pos < this.db.kv!.length;
+    return this.pos !== undefined && this.pos >= 0 && this.pos < this.kv.length;
   }
 
   next(): void {
@@ -41,19 +73,19 @@ export class FakeLevelDBIterator implements LevelDBIteratorI {
   }
 
   keyStr(): string {
-    return toString(this.db.kv![this.pos!][0]);
+    return toString(this.kv[this.pos!][0]);
   }
 
   keyBuf(): ArrayBuffer {
-    return toArraybuf(this.db.kv![this.pos!][0]);
+    return toArraybuf(this.kv[this.pos!][0]);
   }
 
   valueStr(): string {
-    return toString(this.db.kv![this.pos!][1]);
+    return toString(this.kv[this.pos!][1]);
   }
 
   valueBuf(): ArrayBuffer {
-    return toArraybuf(this.db.kv![this.pos!][1]);
+    return toArraybuf(this.kv[this.pos!][1]);
   }
 }
 
@@ -106,36 +138,8 @@ export class FakeLevelDB implements LevelDBI {
     this.kv = null;
   }
 
-  // Return the position at the first key in the source that is at or past `k`.
-  getIdx(k: ArrayBuffer | string, start?: number, end?: number): number {
-    if (!this.kv) {
-      throw new Error('FakeLevelDB was closed!');
-    }
-
-    k = toArraybuf(k);
-    start = start || 0;
-    end = end || this.kv.length;
-
-    const pivot: number = Math.floor(start + (end - start) / 2);
-    if (end - start <= 1) {
-      if (pivot < this.kv.length && arraybufGt(k, this.kv[pivot][0])) {
-        return end;
-      } else {
-        return pivot;
-      }
-    }
-    if (!arraybufGt(this.kv[pivot][0], k) && !arraybufGt(k, this.kv[pivot][0])) { // equality check, done as the inverse of <>
-      return pivot;
-    }
-    if (arraybufGt(this.kv[pivot][0], k)) {
-      return this.getIdx(k, start, pivot);
-    } else {
-      return this.getIdx(k, pivot, end);
-    }
-  }
-
   put(k: ArrayBuffer | string, v: ArrayBuffer | string) {
-    const curIdx = this.getIdx(k);
+    const curIdx = getIdx(this.kv, k);
     // curIdx is the position at the first key in the source that is at or past `k`:
     if (curIdx == this.kv!.length) {
       this.kv!.push([toArraybuf(k), toArraybuf(v)]);
@@ -149,14 +153,15 @@ export class FakeLevelDB implements LevelDBI {
   }
 
   delete(k: ArrayBuffer | string) {
-    const curIdx = this.getIdx(k);
-    if (curIdx != null) {
+    k = toArraybuf(k);
+    const curIdx = getIdx(this.kv, k);
+    if (curIdx < this.kv!.length && !arraybufGt(this.kv![curIdx][0], k) && !arraybufGt(k, this.kv![curIdx][0])) {
       this.kv!.splice(curIdx, 1);
     }
   }
 
   getStr(k: ArrayBuffer | string): null | string {
-    const curIdx = this.getIdx(k);
+    const curIdx = getIdx(this.kv, k);
     if (curIdx == null) {
       return null;
     } else {
@@ -165,7 +170,7 @@ export class FakeLevelDB implements LevelDBI {
   }
 
   getBuf(k: ArrayBuffer | string): null | ArrayBuffer {
-    const curIdx = this.getIdx(k);
+    const curIdx = getIdx(this.kv, k);
     if (curIdx == null) {
       return null;
     } else {
