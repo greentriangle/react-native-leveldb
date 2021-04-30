@@ -26,15 +26,15 @@ target_include_directories(
         PRIVATE
         leveldb/include
         ${LIBFBJNI_INCLUDE_DIR}
-        ../node_modules/react-native/React/Base
-        ../node_modules/react-native/React
-        ../node_modules/react-native/React/Base
-        ../node_modules/react-native/ReactAndroid/src/main/jni
-        ../node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/turbomodule/core/jni
-        ../node_modules/react-native/ReactCommon
-        ../node_modules/react-native/ReactCommon/callinvoker
-        ../node_modules/react-native/ReactCommon/jsi
-        ../node_modules/react-native/ReactCommon/jsi
+        "${NODE_MODULES_DIR}/react-native/React/Base"
+        "${NODE_MODULES_DIR}/react-native/React"
+        "${NODE_MODULES_DIR}/react-native/React/Base"
+        "${NODE_MODULES_DIR}/react-native/ReactAndroid/src/main/jni"
+        "${NODE_MODULES_DIR}/react-native/ReactAndroid/src/main/java/com/facebook/react/turbomodule/core/jni"
+        "${NODE_MODULES_DIR}/react-native/ReactCommon"
+        "${NODE_MODULES_DIR}/react-native/ReactCommon/callinvoker"
+        "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi"
+        "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi"
         ../cpp
 )
 
