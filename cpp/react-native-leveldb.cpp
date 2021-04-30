@@ -49,7 +49,7 @@ leveldb::Iterator* valueToIterator(const jsi::Value& value) {
     return nullptr;
   }
   int idx = (int)value.getNumber();
-  if (idx < 0 || idx >= dbs.size() || !dbs[idx].get()) {
+  if (idx < 0 || idx >= iterators.size()) {
     return nullptr;
   }
 
@@ -60,7 +60,7 @@ std::string leveldbStatusToStr(const leveldb::Status& status) {
   if (status.ok()) {
     return "ok";
   } else if (status.IsNotFound()) {
-      return "not-found";
+    return "not-found";
   } else if (status.IsCorruption()) {
     return "corruption";
   } else if (status.IsIOError()) {
