@@ -430,6 +430,17 @@ void installLeveldb(jsi::Runtime& jsiRuntime, std::string documentDir) {
       }
   );
   jsiRuntime.global().setProperty(jsiRuntime, "leveldbGetBuf", std::move(leveldbGetBuf));
+
+  auto leveldbTestException = jsi::Function::createFromHostFunction(
+      jsiRuntime,
+      jsi::PropNameID::forAscii(jsiRuntime, "leveldbTestException"),
+      0,
+      [](jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
+        throw jsi::JSError(runtime, "leveldbTestException");
+        return nullptr;
+      }
+  );
+  jsiRuntime.global().setProperty(jsiRuntime, "leveldbTestException", std::move(leveldbTestException));
 }
 
 void cleanupLeveldb() {

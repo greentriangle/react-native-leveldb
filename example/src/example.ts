@@ -38,3 +38,13 @@ export function leveldbExample(): boolean {
   return readStringValue == 'value' &&
     readBufferValue.length == 1 && readBufferValue[0] == 654321;
 }
+
+export function leveldbTestExceptionMessage() {
+  try {
+    (global as any).leveldbTestException();
+  } catch (e) {
+    return e.message.slice(0, 100);
+  }
+
+  return "ERROR: No exception thrown?!";
+}

@@ -6,11 +6,12 @@ import {
   BenchmarkResults,
   BenchmarkResultsView
 } from "./benchmark";
-import {leveldbExample} from "./example";
+import {leveldbExample, leveldbTestExceptionMessage} from "./example";
 
 interface BenchmarkState {
   leveldb?: BenchmarkResults;
   leveldbExample?: boolean;
+  leveldbTestException?: string;
   asyncStorage?: BenchmarkResults;
   error?: string;
 }
@@ -23,6 +24,7 @@ export default class App extends React.Component<{}, BenchmarkState> {
       this.setState({
         leveldb: benchmarkLeveldb(),
         leveldbExample: leveldbExample(),
+        leveldbTestException: leveldbTestExceptionMessage(),
       });
 
       benchmarkAsyncStorage().then(res => this.setState({asyncStorage: res}));
@@ -36,6 +38,7 @@ export default class App extends React.Component<{}, BenchmarkState> {
       <View style={styles.container}>
         <Text>Example validity: {this.state.leveldbExample == undefined ? '' : this.state.leveldbExample ? 'passed' : 'failed'}</Text>
         {this.state.leveldb && <BenchmarkResultsView title="LevelDB" {...this.state.leveldb} />}
+        {this.state.leveldbTestException && <Text>Testing Exceptions: {this.state.leveldbTestException}</Text>}
         {this.state.asyncStorage && <BenchmarkResultsView title="AsyncStorage" {...this.state.asyncStorage} />}
         {this.state.error && <Text>ERROR RUNNING: {this.state.error}</Text>}
       </View>
