@@ -155,7 +155,7 @@ export class LevelDB implements LevelDBI {
   }
 
   delete(k: ArrayBuffer | string) {
-    g.leveldbPut(this.ref, k);
+    g.leveldbDelete(this.ref, k);
   }
 
   getStr(k: ArrayBuffer | string): null | string {
