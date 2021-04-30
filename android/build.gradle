@@ -40,7 +40,6 @@ android {
             abiFilters 'x86', 'x86_64', 'armeabi-v7a', 'arm64-v8a'
         }
     }
-
   }
 
   externalNativeBuild {
@@ -61,6 +60,14 @@ android {
   compileOptions {
     sourceCompatibility JavaVersion.VERSION_1_8
     targetCompatibility JavaVersion.VERSION_1_8
+  }
+
+  buildFeatures {
+    prefab true
+  }
+  configurations {
+    extractHeaders
+    extractJNI
   }
 }
 
@@ -141,4 +148,52 @@ dependencies {
   // noinspection GradleDynamicVersion
   api 'com.facebook.react:react-native:+'
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+
+  // noinspection GradleDynamicVersion
+  extractHeaders("com.facebook.fbjni:fbjni:+:headers")
+  // noinspection GradleDynamicVersion
+  extractJNI("com.facebook.fbjni:fbjni:+")
+
+  def rnAAR = fileTree("${rootDir}/../node_modules/react-native/android").matching({ it.include "**/**/*.aar" }).singleFile
+
+  extractJNI(files(rnAAR))
+}
+
+// fbjni
+// https://github.com/facebookincubator/fbjni/blob/master/docs/android_setup.md
+
+task extractAARHeaders {
+  doLast {
+    configurations.extractHeaders.files.each {
+      def file = it.absoluteFile
+      copy {
+        from zipTree(file)
+        into "$buildDir/$file.name"
+        include "**/*.h"
+      }
+    }
+  }
+}
+
+task extractJNIFiles {
+  doLast {
+    configurations.extractJNI.files.each {
+      def file = it.absoluteFile
+
+      copy {
+        from zipTree(file)
+        into "$buildDir/$file.name"
+        include "jni/**/*"
+      }
+    }
+  }
+}
+
+// pre-native build pipeline
+
+tasks.whenTaskAdded { task ->
+  if (task.name.contains('externalNativeBuild')) {
+    task.dependsOn(extractAARHeaders)
+    task.dependsOn(extractJNIFiles)
+  }
 }
