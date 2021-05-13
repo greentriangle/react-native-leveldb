@@ -56,24 +56,6 @@ leveldb::Iterator* valueToIterator(const jsi::Value& value) {
   return iterators[idx].get();
 }
 
-std::string leveldbStatusToStr(const leveldb::Status& status) {
-  if (status.ok()) {
-    return "ok";
-  } else if (status.IsNotFound()) {
-    return "not-found";
-  } else if (status.IsCorruption()) {
-    return "corruption";
-  } else if (status.IsIOError()) {
-    return "io-error";
-  } else if (status.IsNotSupportedError()) {
-    return "not-supported-error";
-  } else if (status.IsInvalidArgument()) {
-    return "invalid-argument";
-  } else {
-    return "unknown-error";
-  }
-}
-
 void installLeveldb(jsi::Runtime& jsiRuntime, std::string documentDir) {
   if (documentDir[documentDir.length() - 1] != '/') {
     documentDir += '/';
@@ -100,7 +82,7 @@ void installLeveldb(jsi::Runtime& jsiRuntime, std::string documentDir) {
 
         if (!status.ok()) {
           dbs[idx].reset();
-          throw jsi::JSError(runtime, "leveldbOpen/" + leveldbStatusToStr(status));
+          throw jsi::JSError(runtime, "leveldbOpen/" + status.ToString());
         }
 
         return jsi::Value(idx);
@@ -121,7 +103,7 @@ void installLeveldb(jsi::Runtime& jsiRuntime, std::string documentDir) {
         std::string path = documentDir + arguments[0].getString(runtime).utf8(runtime);
         leveldb::Status status = leveldb::DestroyDB(path, options);
         if (!status.ok()) {
-          throw jsi::JSError(runtime, "leveldbDestroy/" + leveldbStatusToStr(status));
+          throw jsi::JSError(runtime, "leveldbDestroy/" + status.ToString());
         }
 
         return nullptr;
@@ -162,7 +144,7 @@ void installLeveldb(jsi::Runtime& jsiRuntime, std::string documentDir) {
         auto status = db->Put(leveldb::WriteOptions(), key, value);
 
         if (!status.ok()) {
-          throw jsi::JSError(runtime, "leveldbPut/" + leveldbStatusToStr(status));
+          throw jsi::JSError(runtime, "leveldbPut/" + status.ToString());
         }
 
         return nullptr;
@@ -186,7 +168,7 @@ void installLeveldb(jsi::Runtime& jsiRuntime, std::string documentDir) {
         if (status.ok() || status.IsNotFound()) {
           return nullptr;
         } else {
-          throw jsi::JSError(runtime, "leveldbDelete/" + leveldbStatusToStr(status));
+          throw jsi::JSError(runtime, "leveldbDelete/" + status.ToString());
         }
       }
   );
@@ -358,7 +340,7 @@ void installLeveldb(jsi::Runtime& jsiRuntime, std::string documentDir) {
         if (status.IsNotFound()) {
           return nullptr;
         } else if (!status.ok()) {
-          throw jsi::JSError(runtime, "leveldbGetStr/" + leveldbStatusToStr(status));
+          throw jsi::JSError(runtime, "leveldbGetStr/" + status.ToString());
         }
         return jsi::Value(jsi::String::createFromUtf8(runtime, value));
       }
@@ -419,7 +401,7 @@ void installLeveldb(jsi::Runtime& jsiRuntime, std::string documentDir) {
         if (status.IsNotFound()) {
           return nullptr;
         } else if (!status.ok()) {
-          throw jsi::JSError(runtime, "leveldbGetBuf/" + leveldbStatusToStr(status));
+          throw jsi::JSError(runtime, "leveldbGetBuf/" + status.ToString());
         }
 
         jsi::Function arrayBufferCtor = runtime.global().getPropertyAsFunction(runtime, "ArrayBuffer");
