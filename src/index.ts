@@ -132,6 +132,20 @@ export class LevelDB implements LevelDBI {
   private static openPathRefs: { [name: string]: undefined | number } = {};
   private ref: undefined | number;
 
+  // The native module may load asynchronously, in which case we have to wait for it. This method waits for the native
+  // module to appear, and returns true. If we were not able to obtain the native module, returns false.
+  public static async waitNativeModuleInitialized(): Promise<boolean> {
+    for (let i = 0; i < 2000; ++i) {
+      if (g.leveldbOpen) {
+        return true;
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 20));  // Sleep for 20 milliseconds.
+    }
+
+    return false;
+  }
+
   constructor(name: string, createIfMissing: boolean, errorIfExists: boolean) {
     if (LevelDB.openPathRefs[name] !== undefined) {
       this.ref = LevelDB.openPathRefs[name];
