@@ -187,6 +187,20 @@ export class LevelDB implements LevelDBI {
     return new LevelDBIterator(this.ref);
   }
 
+  // Merges the data from another LevelDB into this one. All keys from src will be written into this LevelDB,
+  // overwriting any existing values.
+  // batchMerge=true will write all values from src in one transaction, thus ensuring that the dst DB is not left
+  // in a corrupt state.
+  merge(src: LevelDB, batchMerge: boolean) {
+    if (this.ref === undefined) {
+      throw new Error('LevelDB.merge: could not merge, the dest DB (this) was closed!');
+    }
+    if (src.ref === undefined) {
+      throw new Error('LevelDB.merge: could not merge, the source DB was closed!');
+    }
+    g.leveldbMerge(this.ref, src.ref, batchMerge);
+  }
+
   static destroyDB(name: string) {
     if (LevelDB.openPathRefs[name] !== undefined) {
       throw new Error('DB is open! Cannot destroy');

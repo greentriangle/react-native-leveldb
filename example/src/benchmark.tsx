@@ -2,53 +2,11 @@ import {LevelDB} from "react-native-leveldb";
 import {Text} from "react-native";
 import * as React from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import {compareReadWrite, getRandomString, getTestSetArrayBuffer, getTestSetString} from "./test-util";
 
 export interface BenchmarkResults {
   writeMany: { numKeys: number, durationMs: number }
   readMany: { numKeys: number, durationMs: number }
-}
-
-function getRandomArrayBuffer(size: number): ArrayBuffer {
-  const buffer = new ArrayBuffer(size);
-  const view = new Uint8Array(buffer);
-  for (let i = 0; i < size; ++i) {
-    view[i] = Math.random() * 256;
-  }
-  return buffer;
-}
-
-function getTestSetArrayBuffer(length: number) {
-  const writeKvs: [ArrayBuffer, ArrayBuffer][] = [];
-  for (let i = 0; i < length; ++i) {
-    writeKvs.push([getRandomArrayBuffer(32), getRandomArrayBuffer(1024)]);
-  }
-
-  return writeKvs;
-}
-
-const alphabet = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-';
-function getRandomString(size: number): string {
-  let buffer = '';
-  for (let i = 0; i < size; ++i) {
-    buffer += alphabet[Math.floor(Math.random() * alphabet.length)];
-  }
-
-  return buffer;
-}
-
-function getTestSetString(length: number) {
-  const writeKvs: [string, string][] = [];
-  for (let i = 0; i < length; ++i) {
-    writeKvs.push([getRandomString(32), getRandomString(1024)]);
-  }
-
-  return writeKvs;
-}
-
-function compareReadWrite<T>(writeKvs: [T, T][], readKvs: [T, T][]) {
-  if (readKvs.length != writeKvs.length) {
-    throw new Error(`benchmark: expected ${writeKvs.length} KVs; got: ${readKvs.length}`);
-  }
 }
 
 export function benchmarkLeveldb(): BenchmarkResults {

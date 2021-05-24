@@ -1,4 +1,5 @@
 import {LevelDB} from "react-native-leveldb";
+import {bufEquals, getRandomString} from "./test-util";
 
 export function leveldbExample(): boolean {
   // Open a potentially new database.
@@ -39,7 +40,47 @@ export function leveldbExample(): boolean {
     readBufferValue.length == 1 && readBufferValue[0] == 654321;
 }
 
-export function leveldbTestExceptionMessage() {
+export function leveldbTestMerge(batchMerge: boolean) {
+  let nameDst = getRandomString(32) + '.db';
+  console.info('leveldbTestMerge: Opening DB', nameDst);
+  const dbDst = new LevelDB(nameDst, true, true);
+  dbDst.put('key1', 'value1');
+  dbDst.put('key2', 'value2');
+
+  const key3 = new Uint8Array([1, 2, 3]);
+  const value3 = new Uint8Array([4, 5, 6]);
+  dbDst.put(key3.buffer, value3.buffer);
+
+  let nameSrc = getRandomString(32) + '.db';
+  console.info('leveldbTestMerge: Opening DB', nameSrc);
+  const dbSrc = new LevelDB(nameSrc, true, true);
+  dbSrc.put('keep', 'value');
+  dbSrc.put('key2', 'valueNew');
+  const value3New = new Uint8Array([7, 8, 9]);
+  dbSrc.put(key3.buffer, value3New.buffer);
+
+  dbDst.merge(dbSrc, batchMerge);
+  dbSrc.close();
+
+  const errors: string[] = [];
+  if (dbDst.getStr('key1') != 'value1') {
+    errors.push(`key1 didn't have expected value: ${dbDst.getStr('key1')}`);
+  }
+  if (dbDst.getStr('key2') != 'valueNew') {
+    errors.push(`key2 didn't have expected value: ${dbDst.getStr('key2')}`);
+  }
+  if (!bufEquals(dbDst.getBuf(key3.buffer)!, value3New)) {
+    errors.push(`key3 (buf) didn't have expected value: ${new Uint8Array(dbDst.getBuf(key3.buffer)!)}`);
+  }
+  if (dbDst.getStr('keep') != 'value') {
+    errors.push(`keep didn't have expected value: ${dbDst.getStr('keep')}`);
+  }
+
+  dbDst.close();
+  return errors;
+}
+
+export function leveldbTests() {
   let s: string[] = [];
   try {
     (global as any).leveldbTestException();
@@ -50,9 +91,31 @@ export function leveldbTestExceptionMessage() {
 
   try {
     (global as any).leveldbPut(-1);
-    s.push('leveldbPut out of range: FAILED! No exception.');
+    s.push('leveldbPut exception (out of range): FAILED! No exception.');
   } catch (e) {
-    s.push('leveldbPut out of range: ' + e.message);
+    s.push('leveldbPut exception (out of range): ' + e.message);
+  }
+
+  try {
+    const res = leveldbTestMerge(true);
+    if (res.length) {
+      s.push('leveldbTestMerge(true) failed with:' + res.join('; '));
+    } else {
+      s.push('leveldbTestMerge(true) succeeded');
+    }
+  } catch (e) {
+    s.push('leveldbTestMerge(true) threw: ' + e.message);
+  }
+
+  try {
+    const res = leveldbTestMerge(false);
+    if (res.length) {
+      s.push('leveldbTestMerge(false) failed with:' + res.join('; '));
+    } else {
+      s.push('leveldbTestMerge(false) succeeded');
+    }
+  } catch (e) {
+    s.push('leveldbTestMerge(false) threw: ' + e.message);
   }
 
   return s;

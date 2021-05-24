@@ -449,6 +449,48 @@ void installLeveldb(jsi::Runtime& jsiRuntime, std::string documentDir) {
       }
   );
   jsiRuntime.global().setProperty(jsiRuntime, "leveldbTestException", std::move(leveldbTestException));
+
+  auto leveldbMerge = jsi::Function::createFromHostFunction(
+      jsiRuntime,
+      jsi::PropNameID::forAscii(jsiRuntime, "leveldbMerge"),
+      3,  // dbs index dest, dbs index src, batchBool
+      [](jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
+        std::string dbErr;
+        leveldb::DB* dbDst = valueToDb(arguments[0], &dbErr);
+        if (!dbDst) {
+          throw jsi::JSError(runtime, "leveldbMerge/dst/" + dbErr);
+        }
+        leveldb::DB* dbSrc = valueToDb(arguments[1], &dbErr);
+        if (!dbSrc) {
+          throw jsi::JSError(runtime, "leveldbMerge/src/" + dbErr);
+        }
+        if (!arguments[2].isBool()) {
+          throw jsi::JSError(runtime, "leveldbMerge/batchMerge-param-not-a-boolean");
+        }
+        bool batchMerge = (bool)arguments[2].getBool();
+
+        leveldb::WriteBatch batch;
+        std::unique_ptr<leveldb::Iterator> itSrc(dbSrc->NewIterator(leveldb::ReadOptions()));
+        for (itSrc->SeekToFirst(); itSrc->Valid(); itSrc->Next()) {
+          if (batchMerge) {
+            batch.Put(itSrc->key(), itSrc->value());
+          } else {
+            dbDst->Put(leveldb::WriteOptions(), itSrc->key(), itSrc->value());
+          }
+        }
+
+        if (!itSrc->status().ok()) {
+          throw jsi::JSError(runtime, "leveldbMerge/" + itSrc->status().ToString());
+        }
+
+        if (batchMerge) {
+          dbDst->Write(leveldb::WriteOptions(), &batch);
+        }
+
+        return nullptr;
+      }
+  );
+  jsiRuntime.global().setProperty(jsiRuntime, "leveldbMerge", std::move(leveldbMerge));
 }
 
 void cleanupLeveldb() {
