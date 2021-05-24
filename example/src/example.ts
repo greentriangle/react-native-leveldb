@@ -40,11 +40,20 @@ export function leveldbExample(): boolean {
 }
 
 export function leveldbTestExceptionMessage() {
+  let s: string[] = [];
   try {
     (global as any).leveldbTestException();
+    s.push('leveldbTestException: FAILED! No exception.');
   } catch (e) {
-    return e.message.slice(0, 100);
+    s.push('leveldbTestException: ' + e.message.slice(0, 20));
   }
 
-  return "ERROR: No exception thrown?!";
+  try {
+    (global as any).leveldbPut(-1);
+    s.push('leveldbPut out of range: FAILED! No exception.');
+  } catch (e) {
+    s.push('leveldbPut out of range: ' + e.message);
+  }
+
+  return s;
 }

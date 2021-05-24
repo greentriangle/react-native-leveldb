@@ -32,12 +32,18 @@ bool valueToString(jsi::Runtime& runtime, const jsi::Value& value, std::string* 
   return false;
 }
 
-leveldb::DB* valueToDb(const jsi::Value& value) {
+leveldb::DB* valueToDb(const jsi::Value& value, std::string* err) {
   if (!value.isNumber()) {
+    *err = "valueToDb/param-not-a-number";
     return nullptr;
   }
   int idx = (int)value.getNumber();
-  if (idx < 0 || idx >= dbs.size() || !dbs[idx].get()) {
+  if (idx < 0 || idx >= dbs.size()) {
+    *err = "valueToDb/idx-out-of-range";
+    return nullptr;
+  }
+  if (!dbs[idx].get()) {
+    *err = "valueToDb/db-closed";
     return nullptr;
   }
 
@@ -136,8 +142,12 @@ void installLeveldb(jsi::Runtime& jsiRuntime, std::string documentDir) {
       3,  // dbs index, key, value
       [](jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
         std::string key, value;
-        leveldb::DB* db = valueToDb(arguments[0]);
-        if (!db || !valueToString(runtime, arguments[1], &key) || !valueToString(runtime, arguments[2], &value)) {
+        std::string dbErr;
+        leveldb::DB* db = valueToDb(arguments[0], &dbErr);
+        if (!db) {
+          throw jsi::JSError(runtime, "leveldbPut/" + dbErr);
+        }
+        if (!valueToString(runtime, arguments[1], &key) || !valueToString(runtime, arguments[2], &value)) {
           throw jsi::JSError(runtime, "leveldbPut/invalid-params");
         }
 
@@ -158,8 +168,12 @@ void installLeveldb(jsi::Runtime& jsiRuntime, std::string documentDir) {
       2,  // dbs index, key
       [](jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
         std::string key;
-        leveldb::DB* db = valueToDb(arguments[0]);
-        if (!db || !valueToString(runtime, arguments[1], &key)) {
+        std::string dbErr;
+        leveldb::DB* db = valueToDb(arguments[0], &dbErr);
+        if (!db) {
+          throw jsi::JSError(runtime, "leveldbDelete/" + dbErr);
+        }
+        if (!valueToString(runtime, arguments[1], &key)) {
           throw jsi::JSError(runtime, "leveldbDelete/invalid-params");
         }
 
@@ -179,9 +193,10 @@ void installLeveldb(jsi::Runtime& jsiRuntime, std::string documentDir) {
       jsi::PropNameID::forAscii(jsiRuntime, "leveldbNewIterator"),
       1,  // index into dbs vector
       [](jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
-        leveldb::DB* db = valueToDb(arguments[0]);
+        std::string dbErr;
+        leveldb::DB* db = valueToDb(arguments[0], &dbErr);
         if (!db) {
-          throw jsi::JSError(runtime, "leveldbNewIterator/invalid-params");
+          throw jsi::JSError(runtime, "leveldbNewIterator/" + dbErr);
         }
         iterators.push_back(std::unique_ptr<leveldb::Iterator>{db->NewIterator(leveldb::ReadOptions())});
         return jsi::Value((int)iterators.size() - 1);
@@ -331,9 +346,15 @@ void installLeveldb(jsi::Runtime& jsiRuntime, std::string documentDir) {
       jsi::PropNameID::forAscii(jsiRuntime, "leveldbGetStr"),
       2,  // dbs index, key
       [](jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
-        leveldb::DB* db = valueToDb(arguments[0]);
+        std::string dbErr;
+        leveldb::DB* db = valueToDb(arguments[0], &dbErr);
+        if (!db) {
+          throw jsi::JSError(runtime, "leveldbGetStr/" + dbErr);
+        }
         std::string key;
-        valueToString(runtime, arguments[1], &key);
+        if (!valueToString(runtime, arguments[1], &key)) {
+          throw jsi::JSError(runtime, "leveldbGetStr/invalid-params");
+        }
 
         std::string value;
         auto status = db->Get(leveldb::ReadOptions(), key, &value);
@@ -392,10 +413,15 @@ void installLeveldb(jsi::Runtime& jsiRuntime, std::string documentDir) {
       jsi::PropNameID::forAscii(jsiRuntime, "leveldbGetBuf"),
       2,  // dbs index, key
       [](jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
-        leveldb::DB* db = valueToDb(arguments[0]);
+        std::string dbErr;
+        leveldb::DB* db = valueToDb(arguments[0], &dbErr);
+        if (!db) {
+          throw jsi::JSError(runtime, "leveldbGetBuf/" + dbErr);
+        }
         std::string key;
-        valueToString(runtime, arguments[1], &key);
-
+        if (!valueToString(runtime, arguments[1], &key)) {
+          throw jsi::JSError(runtime, "leveldbGetBuf/invalid-params");
+        }
         std::string value;
         auto status = db->Get(leveldb::ReadOptions(), key, &value);
         if (status.IsNotFound()) {
