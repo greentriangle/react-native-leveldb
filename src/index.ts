@@ -201,11 +201,15 @@ export class LevelDB implements LevelDBI {
     g.leveldbMerge(this.ref, src.ref, batchMerge);
   }
 
-  static destroyDB(name: string) {
+  static destroyDB(name: string, force?: boolean) {
     if (LevelDB.openPathRefs[name] !== undefined) {
-      throw new Error('DB is open! Cannot destroy');
-    } else {
-      g.leveldbDestroy(name);
+      if (force) {
+        g.leveldbClose(LevelDB.openPathRefs[name]);
+      } else {
+        throw new Error('DB is open! Cannot destroy');
+      }
     }
+
+    g.leveldbDestroy(name);
   }
 }
