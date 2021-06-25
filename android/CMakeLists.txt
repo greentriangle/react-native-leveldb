@@ -7,6 +7,10 @@ set (CMAKE_VERBOSE_MAKEFILE ON)
 set (CMAKE_CXX_STANDARD 14)
 set (BUILD_DIR ${CMAKE_SOURCE_DIR}/build)
 
+set (LEVELDB_BUILD_TESTS OFF)
+set (LEVELDB_BUILD_BENCHMARKS OFF)
+set (LEVELDB_INSTALL OFF)
+
 add_subdirectory(../cpp/leveldb
         ./leveldb
         EXCLUDE_FROM_ALL)
