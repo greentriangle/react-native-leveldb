@@ -205,6 +205,7 @@ export class LevelDB implements LevelDBI {
     if (LevelDB.openPathRefs[name] !== undefined) {
       if (force) {
         g.leveldbClose(LevelDB.openPathRefs[name]);
+        delete LevelDB.openPathRefs[name];
       } else {
         throw new Error('DB is open! Cannot destroy');
       }
