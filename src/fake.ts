@@ -138,6 +138,10 @@ export class FakeLevelDB implements LevelDBI {
     this.kv = null;
   }
 
+  closed() {
+    return this.kv == null;
+  }
+
   put(k: ArrayBuffer | string, v: ArrayBuffer | string) {
     const curIdx = getIdx(this.kv, k);
     // curIdx is the position at the first key in the source that is at or past `k`:
