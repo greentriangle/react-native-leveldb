@@ -45,7 +45,12 @@ export interface LevelDBIteratorI {
 }
 
 export interface LevelDBI {
+  // Close this ref to LevelDB.
   close(): void;
+
+  // Returns true if this ref to LevelDB is closed. This can happen if close() is called on *any* open reference to a
+  // given LevelDB name.
+  closed(): boolean;
 
   // Set the database entry for "k" to "v".  Returns OK on success, throws an exception on error.
   put(k: ArrayBuffer | string, v: ArrayBuffer | string): void;
@@ -162,6 +167,10 @@ export class LevelDB implements LevelDBI {
       }
     }
     this.ref = undefined;
+  }
+
+  closed(): boolean {
+    return this.ref === undefined || !Object.values(LevelDB.openPathRefs).includes(this.ref);
   }
 
   put(k: ArrayBuffer | string, v: ArrayBuffer | string) {
