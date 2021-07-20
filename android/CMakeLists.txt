@@ -7,9 +7,9 @@ set (CMAKE_VERBOSE_MAKEFILE ON)
 set (CMAKE_CXX_STANDARD 14)
 set (BUILD_DIR ${CMAKE_SOURCE_DIR}/build)
 
-set (LEVELDB_BUILD_TESTS OFF)
-set (LEVELDB_BUILD_BENCHMARKS OFF)
-set (LEVELDB_INSTALL OFF)
+set (LEVELDB_BUILD_TESTS OFF CACHE INTERNAL "Really don't build LevelDB tests") # FORCE implied by INTERNAL
+set (LEVELDB_BUILD_BENCHMARKS OFF CACHE INTERNAL "Really don't build LevelDB benchmarks")
+set (LEVELDB_INSTALL OFF CACHE INTERNAL "Really don't install LevelDB")
 
 add_subdirectory(../cpp/leveldb
         ./leveldb
