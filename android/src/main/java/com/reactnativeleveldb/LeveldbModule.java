@@ -8,7 +8,7 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule;
 
 class LeveldbModule extends ReactContextBaseJavaModule {
   static {
-    System.loadLibrary("cpp");
+    System.loadLibrary("reactnativeleveldb");
   }
 
   private static native void initialize(long jsiPtr, String docDir);

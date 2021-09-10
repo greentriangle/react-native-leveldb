@@ -1,21 +1,15 @@
 buildscript {
-  // Buildscript is evaluated before everything else so we can't use getExtOrDefault
-  def kotlin_version = rootProject.ext.has('kotlinVersion') ? rootProject.ext.get('kotlinVersion') : project.properties['Leveldb_kotlinVersion']
-
   repositories {
     google()
     jcenter()
   }
 
   dependencies {
-    classpath 'com.android.tools.build:gradle:4.1.3'
-    // noinspection DifferentKotlinGradleVersion
-    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    classpath 'com.android.tools.build:gradle:4.2.1'
   }
 }
 
 apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
 
 def getExtOrDefault(name) {
   return rootProject.ext.has(name) ? rootProject.ext.get(name) : project.properties['Leveldb_' + name]
@@ -28,26 +22,33 @@ def getExtOrIntegerDefault(name) {
 android {
   compileSdkVersion getExtOrIntegerDefault('compileSdkVersion')
   buildToolsVersion getExtOrDefault('buildToolsVersion')
+  ndkVersion getExtOrDefault('ndkVersion')
+
   defaultConfig {
-    minSdkVersion 16
+    minSdkVersion 21
     targetSdkVersion getExtOrIntegerDefault('targetSdkVersion')
     versionCode 1
     versionName "1.0"
 
     externalNativeBuild {
-        cmake {
-            cppFlags "-O2 -frtti -fexceptions -Wall -Wno-unused-variable -fstack-protector-all"
-            abiFilters 'x86', 'x86_64', 'armeabi-v7a', 'arm64-v8a'
-            arguments "-DNODE_MODULES_DIR=${rootDir}/../node_modules"
-        }
+      cmake {
+        cppFlags "-fexceptions", "-frtti", "-std=c++1y", "-DONANDROID"
+        abiFilters 'x86', 'x86_64', 'armeabi-v7a', 'arm64-v8a'
+        arguments '-DANDROID_STL=c++_shared',
+          "-DNODE_MODULES_DIR=${rootDir}/../node_modules"
+      }
     }
+
   }
 
   externalNativeBuild {
       cmake {
-          version '3.10.0+'
           path "CMakeLists.txt"
       }
+  }
+
+  packagingOptions {
+    excludes = ["**/libc++_shared.so"]
   }
 
   buildTypes {
@@ -63,11 +64,7 @@ android {
     targetCompatibility JavaVersion.VERSION_1_8
   }
 
-  buildFeatures {
-    prefab true
-  }
   configurations {
-    extractHeaders
     extractJNI
   }
 }
@@ -143,37 +140,12 @@ repositories {
   }
 }
 
-def kotlin_version = getExtOrDefault('kotlinVersion')
-
 dependencies {
   // noinspection GradleDynamicVersion
   api 'com.facebook.react:react-native:+'
-  implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-
-  // noinspection GradleDynamicVersion
-  extractHeaders("com.facebook.fbjni:fbjni:+:headers")
-  // noinspection GradleDynamicVersion
-  extractJNI("com.facebook.fbjni:fbjni:+")
 
   def rnAAR = fileTree("${rootDir}/../node_modules/react-native/android").matching({ it.include "**/**/*.aar" }).singleFile
-
   extractJNI(files(rnAAR))
-}
-
-// fbjni
-// https://github.com/facebookincubator/fbjni/blob/master/docs/android_setup.md
-
-task extractAARHeaders {
-  doLast {
-    configurations.extractHeaders.files.each {
-      def file = it.absoluteFile
-      copy {
-        from zipTree(file)
-        into "$buildDir/$file.name"
-        include "**/*.h"
-      }
-    }
-  }
 }
 
 task extractJNIFiles {
@@ -190,11 +162,8 @@ task extractJNIFiles {
   }
 }
 
-// pre-native build pipeline
-
 tasks.whenTaskAdded { task ->
   if (task.name.contains('externalNativeBuild')) {
-    task.dependsOn(extractAARHeaders)
     task.dependsOn(extractJNIFiles)
   }
 }

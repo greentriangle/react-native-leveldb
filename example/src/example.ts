@@ -93,7 +93,7 @@ export function leveldbTests() {
     (global as any).leveldbPut(-1);
     s.push('leveldbPut exception (out of range): FAILED! No exception.');
   } catch (e) {
-    s.push('leveldbPut exception (out of range): ' + e.message);
+    s.push('leveldbPut exception (out of range): ' + e.message.slice(0, 100));
   }
 
   try {
