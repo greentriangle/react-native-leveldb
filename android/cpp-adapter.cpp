@@ -1,5 +1,5 @@
 #include <jni.h>
-#include "react-native-leveldb.h"
+#include "../cpp/react-native-leveldb.h"
 #include <android/log.h>
 
 extern "C"
