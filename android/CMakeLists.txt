@@ -36,6 +36,12 @@ find_library(
         log
 )
 find_library(
+        JSI_LIB
+        jsi
+        PATHS ${LIBRN_DIR}
+        NO_CMAKE_FIND_ROOT_PATH
+)
+find_library(
         REACT_NATIVE_JNI_LIB
         reactnativejni
         PATHS ${LIBRN_DIR}
@@ -46,6 +52,7 @@ target_link_libraries(
         reactnativeleveldb
         leveldb
         ${log-lib}
+        ${JSI_LIB}
         ${REACT_NATIVE_JNI_LIB}
         android
 )
