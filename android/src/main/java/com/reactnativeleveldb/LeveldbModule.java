@@ -1,12 +1,11 @@
 package com.reactnativeleveldb;
 
-import androidx.annotation.NonNull;
-
+import com.facebook.react.bridge.JavaScriptContextHolder;
 import com.facebook.react.bridge.ReactApplicationContext;
-import com.facebook.react.bridge.ReactContextBaseJavaModule;
+import android.util.Log;
 
 
-class LeveldbModule extends ReactContextBaseJavaModule {
+public class LeveldbModule {
   static {
     System.loadLibrary("reactnativeleveldb");
   }
@@ -14,27 +13,16 @@ class LeveldbModule extends ReactContextBaseJavaModule {
   private static native void initialize(long jsiPtr, String docDir);
   private static native void destruct();
 
-  public LeveldbModule(ReactApplicationContext reactContext) {
-    super(reactContext);
+  private ReactApplicationContext reactApplicationContext;
+  private JavaScriptContextHolder jsContext;
+
+  public static void publicInitialize(ReactApplicationContext reactApplicationContext, JavaScriptContextHolder jsContext) {
+    Log.i("Leveldb", "initializing leveldb");
+    LeveldbModule.initialize(jsContext.get(), reactApplicationContext.getFilesDir().getAbsolutePath());
   }
 
-  @NonNull
-  @Override
-  public String getName() {
-    return "Leveldb";
-  }
-
-  @Override
-  public void initialize() {
-    super.initialize();
-
-    LeveldbModule.initialize(
-      this.getReactApplicationContext().getJavaScriptContextHolder().get(),
-      this.getReactApplicationContext().getFilesDir().getAbsolutePath());
-  }
-
-  @Override
-  public void onCatalystInstanceDestroy() {
+  public static void publicDestruct() {
+    Log.i("Leveldb", "Cleaning up leveldb");
     LeveldbModule.destruct();
   }
 }
