@@ -11,8 +11,8 @@ import com.facebook.react.ReactInstanceManager;
 import com.facebook.soloader.SoLoader;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
+import com.reactnativeleveldb.LeveldbJsiPackage;
 import com.reactnativeleveldb.LeveldbPackage;
-import com.reactnativeleveldb.LeveldbModule;
 import android.util.Log;
 
 public class MainApplication extends Application implements ReactApplication {
@@ -28,7 +28,9 @@ public class MainApplication extends Application implements ReactApplication {
         protected List<ReactPackage> getPackages() {
           @SuppressWarnings("UnnecessaryLocalVariable")
           List<ReactPackage> packages = new PackageList(this).getPackages();
-          Log.i("LeveldbExample", "getPackages");
+          // Packages that cannot be autolinked yet can be added manually here, for LeveldbExample:
+          // packages.add(new MyReactNativePackage());
+          packages.add(new LeveldbPackage());
           return packages;
         }
 
@@ -39,7 +41,7 @@ public class MainApplication extends Application implements ReactApplication {
 
         @Override
         protected JSIModulePackage getJSIModulePackage() {
-          return new LeveldbPackage();
+          return new LeveldbJsiPackage();
         }
       };
 

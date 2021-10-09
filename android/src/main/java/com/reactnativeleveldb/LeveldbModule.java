@@ -1,9 +1,5 @@
 package com.reactnativeleveldb;
 
-import androidx.annotation.NonNull;
-
-import com.facebook.react.bridge.JSIModule;
-import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.JavaScriptContextHolder;
 import com.facebook.react.bridge.ReactApplicationContext;
 import android.util.Log;
