@@ -16,7 +16,7 @@ public class LeveldbPackage implements ReactPackage {
   @NonNull
   @Override
   public List<NativeModule> createNativeModules(@NonNull ReactApplicationContext reactContext) {
-    return Collections.emptyList();
+    return Arrays.<NativeModule>asList(new LeveldbModule(reactContext));
   }
 
   @NonNull
