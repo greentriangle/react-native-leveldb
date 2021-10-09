@@ -5,7 +5,7 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import android.util.Log;
 
 
-public class LeveldbModule {
+public class LeveldbModule extends ReactContextBaseJavaModule {
   static {
     System.loadLibrary("reactnativeleveldb");
   }
@@ -21,8 +21,8 @@ public class LeveldbModule {
     LeveldbModule.initialize(jsContext.get(), reactApplicationContext.getFilesDir().getAbsolutePath());
   }
 
-  public static void publicDestruct() {
-    Log.i("Leveldb", "Cleaning up leveldb");
+  @Override
+  public void onCatalystInstanceDestroy() {
     LeveldbModule.destruct();
   }
 }
