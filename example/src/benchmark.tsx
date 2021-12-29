@@ -28,10 +28,13 @@ export function benchmarkLeveldb(): BenchmarkResults {
   // === readMany
   const readKvs: [ArrayBuffer, ArrayBuffer][] = [];
   started = new Date().getTime();
-  for (let it = db.newIterator().seekToFirst(); it.valid(); it.next()) {
+  let it;
+  for (it = db.newIterator().seekToFirst(); it.valid(); it.next()) {
     readKvs.push([it.keyBuf(), it.valueBuf()]);
   }
+  it.close();
   res.readMany = {numKeys: readKvs.length, durationMs: new Date().getTime() - started};
+  db.close();
 
   compareReadWrite(writeKvs, readKvs);
   return res as BenchmarkResults;

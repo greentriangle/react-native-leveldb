@@ -222,4 +222,6 @@ export class LevelDB implements LevelDBI {
 
     g.leveldbDestroy(name);
   }
+
+   static readFileToBuf = g.leveldbReadFileBuf as (path: string, pos: number, len: number) => ArrayBuffer;
 }

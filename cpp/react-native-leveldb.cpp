@@ -1,6 +1,7 @@
 #import "react-native-leveldb.h"
 
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #import <leveldb/db.h>
 #import <leveldb/write_batch.h>
@@ -491,6 +492,42 @@ void installLeveldb(jsi::Runtime& jsiRuntime, std::string documentDir) {
       }
   );
   jsiRuntime.global().setProperty(jsiRuntime, "leveldbMerge", std::move(leveldbMerge));
+
+  auto leveldbReadFileBuf = jsi::Function::createFromHostFunction(
+      jsiRuntime,
+      jsi::PropNameID::forAscii(jsiRuntime, "leveldbReadFileBuf"),
+      3,  // path, pos, len
+      [](jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
+        std::string path;
+        if (!valueToString(runtime, arguments[0], &path) || !arguments[1].isNumber() || !arguments[2].isNumber()) {
+          throw jsi::JSError(runtime, "leveldbReadFileBuf/invalid-params");
+        }
+        int pos = (int)arguments[1].getNumber(), len = (int)arguments[2].getNumber();
+        char data[len];
+        std::ifstream file(path, std::ios::in | std::ios::binary);
+        if (!file || !file.is_open()) {
+          throw jsi::JSError(runtime, "leveldbReadFileBuf/open-error/" + std::string(std::strerror(errno)));
+        }
+
+        file.seekg(0, std::ios::end);
+        size_t file_size = file.tellg();
+        if (file_size < pos + len) {
+          throw jsi::JSError(runtime, "leveldbReadFileBuf/invalid-len-plus-pos");
+        }
+
+        file.seekg(pos, std::ios::beg);
+        if (!file.read(data, len)) {
+          throw jsi::JSError(runtime, "leveldbReadFileBuf/read-error/" + std::string(std::strerror(errno)));
+        }
+
+        jsi::Function arrayBufferCtor = runtime.global().getPropertyAsFunction(runtime, "ArrayBuffer");
+        jsi::Object o = arrayBufferCtor.callAsConstructor(runtime, len).getObject(runtime);
+        jsi::ArrayBuffer buf = o.getArrayBuffer(runtime);
+        memcpy(buf.data(runtime), data, len);
+        return o;
+      }
+  );
+    jsiRuntime.global().setProperty(jsiRuntime, "leveldbReadFileBuf", std::move(leveldbReadFileBuf));
 }
 
 void cleanupLeveldb() {
