@@ -151,12 +151,17 @@ export class LevelDB implements LevelDBI {
     return false;
   }
 
-  constructor(name: string, createIfMissing: boolean, errorIfExists: boolean) {
+  private constructor(name: string, createIfMissing: boolean, errorIfExists: boolean) {
     if (LevelDB.openPathRefs[name] !== undefined) {
       this.ref = LevelDB.openPathRefs[name];
     } else {
       LevelDB.openPathRefs[name] = this.ref = g.leveldbOpen(name, createIfMissing, errorIfExists);
     }
+  }
+
+  static async create(name: string, createIfMissing: boolean, errorIfExists: boolean) {
+    await this.waitNativeModuleInitialized();
+    return new LevelDB(name, createIfMissing, errorIfExists);
   }
 
   close() {

@@ -27,7 +27,12 @@ public class LeveldbModule extends ReactContextBaseJavaModule {
 
   public static void publicInitialize(ReactApplicationContext reactApplicationContext, JavaScriptContextHolder jsContext) {
     Log.i("Leveldb", "initializing leveldb");
-    LeveldbModule.initialize(jsContext.get(), reactApplicationContext.getFilesDir().getAbsolutePath());
+    reactApplicationContext.runOnJSQueueThread(new Runnable() {
+      @Override
+      public void run() {
+        LeveldbModule.initialize(jsContext.get(), reactApplicationContext.getFilesDir().getAbsolutePath());
+      }
+    });
   }
 
   @Override
