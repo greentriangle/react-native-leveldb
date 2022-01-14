@@ -1,5 +1,5 @@
 # react-native-leveldb
-Sponsored by ![GreenTriangle](https://www.green-triangle.com/wp-content/uploads/2018/08/cropped-GreenTriangle-01-4.png)
+Sponsored by ![GreenTriangle](https://www.green-triangle.com/wp-content/uploads/2021/04/Logo-300x66.png)
 
 Superfast React Native bindings for LevelDB:
 * 2-7x faster than AsyncStorage or react-native-sqlite-storage - try the benchmarks under example/!
