@@ -23,10 +23,7 @@ const name = 'example.db';
 const createIfMissing = true;
 const errorIfExists = false;
 
-// NOTE: in production code, and if opening a LevelDB immediately when the app starts,
-// you should await for the native module to appear, like this:
-// await LevelDB.waitNativeModuleInitialized()
-const db = new LevelDB(name, createIfMissing, errorIfExists);
+const db = await LevelDB.create(name, createIfMissing, errorIfExists);
 
 // Insert something into the database. Note that the key and the
 // value can either be strings or ArrayBuffers. 

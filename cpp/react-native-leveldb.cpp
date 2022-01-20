@@ -503,7 +503,6 @@ void installLeveldb(jsi::Runtime& jsiRuntime, std::string documentDir) {
           throw jsi::JSError(runtime, "leveldbReadFileBuf/invalid-params");
         }
         int pos = (int)arguments[1].getNumber(), len = (int)arguments[2].getNumber();
-        char data[len];
         std::ifstream file(path, std::ios::in | std::ios::binary);
         if (!file || !file.is_open()) {
           throw jsi::JSError(runtime, "leveldbReadFileBuf/open-error/" + std::string(std::strerror(errno)));
@@ -516,14 +515,14 @@ void installLeveldb(jsi::Runtime& jsiRuntime, std::string documentDir) {
         }
 
         file.seekg(pos, std::ios::beg);
-        if (!file.read(data, len)) {
-          throw jsi::JSError(runtime, "leveldbReadFileBuf/read-error/" + std::string(std::strerror(errno)));
-        }
 
         jsi::Function arrayBufferCtor = runtime.global().getPropertyAsFunction(runtime, "ArrayBuffer");
         jsi::Object o = arrayBufferCtor.callAsConstructor(runtime, len).getObject(runtime);
         jsi::ArrayBuffer buf = o.getArrayBuffer(runtime);
-        memcpy(buf.data(runtime), data, len);
+        if (!file.read((char*)buf.data(runtime), len)) {
+          throw jsi::JSError(runtime, "leveldbReadFileBuf/read-error/" + std::string(std::strerror(errno)));
+        }
+
         return o;
       }
   );
