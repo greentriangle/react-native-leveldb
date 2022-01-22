@@ -11,7 +11,6 @@ import com.facebook.react.ReactInstanceManager;
 import com.facebook.soloader.SoLoader;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
-import com.reactnativeleveldb.LeveldbJsiPackage;
 import com.reactnativeleveldb.LeveldbPackage;
 import android.util.Log;
 
@@ -37,11 +36,6 @@ public class MainApplication extends Application implements ReactApplication {
         @Override
         protected String getJSMainModuleName() {
           return "index";
-        }
-
-        @Override
-        protected JSIModulePackage getJSIModulePackage() {
-          return new LeveldbJsiPackage();
         }
       };
 

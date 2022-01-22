@@ -3,28 +3,28 @@
 #import <React/RCTUtils.h>
 #import "react-native-leveldb.h"
 
+using namespace facebook;
+
 @implementation Leveldb
 @synthesize bridge = _bridge;
 @synthesize methodQueue = _methodQueue;
 
-RCT_EXPORT_MODULE()
+RCT_EXPORT_MODULE(Leveldb)
 
-+ (BOOL)requiresMainQueueSetup {
-  return YES;
-}
-
-- (void)setBridge:(RCTBridge *)bridge
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(install)
 {
-  _bridge = bridge;
-  _setBridgeOnMainQueue = RCTIsMainQueue();
-
-  RCTCxxBridge *cxxBridge = (RCTCxxBridge *)self.bridge;
-  if (!cxxBridge.runtime) {
-    return;
+  NSLog(@"Installing Leveldb bindings...");
+  RCTBridge *bridge = [RCTBridge currentBridge];
+  RCTCxxBridge *cxxBridge = (RCTCxxBridge *) bridge;
+  if (cxxBridge == nil) {
+    return @false;
   }
-
+  if (cxxBridge.runtime == nil) {
+    return @false;
+  }
   NSURL *docPath = [[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask][0];
-    installLeveldb(*(facebook::jsi::Runtime *)cxxBridge.runtime, std::string([[docPath path] UTF8String]));
+  installLeveldb(*(jsi::Runtime *)cxxBridge.runtime, std::string([[docPath path] UTF8String]));
+  return @true;
 }
 
 - (void)invalidate {

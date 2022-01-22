@@ -1,12 +1,12 @@
 import {LevelDB} from "react-native-leveldb";
 import {bufEquals, getRandomString} from "./test-util";
 
-export async function leveldbExample(): Promise<boolean> {
+export function leveldbExample(): boolean {
   // Open a potentially new database.
   const name = 'example.db';
   const createIfMissing = true;
   const errorIfExists = false;
-  const db = await LevelDB.create(name, createIfMissing, errorIfExists);
+  const db = new LevelDB(name, createIfMissing, errorIfExists);
 
   // Insert something into the database. Note that the key and the
   // value can either be strings or ArrayBuffers.
@@ -40,10 +40,10 @@ export async function leveldbExample(): Promise<boolean> {
     readBufferValue.length == 1 && readBufferValue[0] == 654321;
 }
 
-export async function leveldbTestMerge(batchMerge: boolean) {
+export function leveldbTestMerge(batchMerge: boolean) {
   let nameDst = getRandomString(32) + '.db';
   console.info('leveldbTestMerge: Opening DB', nameDst);
-  const dbDst = await LevelDB.create(nameDst, true, true);
+  const dbDst = new LevelDB(nameDst, true, true);
   dbDst.put('key1', 'value1');
   dbDst.put('key2', 'value2');
 
@@ -53,7 +53,7 @@ export async function leveldbTestMerge(batchMerge: boolean) {
 
   let nameSrc = getRandomString(32) + '.db';
   console.info('leveldbTestMerge: Opening DB', nameSrc);
-  const dbSrc = await LevelDB.create(nameSrc, true, true);
+  const dbSrc = new LevelDB(nameSrc, true, true);
   dbSrc.put('keep', 'value');
   dbSrc.put('key2', 'valueNew');
   const value3New = new Uint8Array([7, 8, 9]);
@@ -80,7 +80,7 @@ export async function leveldbTestMerge(batchMerge: boolean) {
   return errors;
 }
 
-export async function leveldbTests() {
+export function leveldbTests() {
   let s: string[] = [];
   try {
     (global as any).leveldbTestException();
@@ -97,7 +97,7 @@ export async function leveldbTests() {
   }
 
   try {
-    const res = await leveldbTestMerge(true);
+    const res = leveldbTestMerge(true);
     if (res.length) {
       s.push('leveldbTestMerge(true) failed with:' + res.join('; '));
     } else {
@@ -108,7 +108,7 @@ export async function leveldbTests() {
   }
 
   try {
-    const res = await leveldbTestMerge(false);
+    const res = leveldbTestMerge(false);
     if (res.length) {
       s.push('leveldbTestMerge(false) failed with:' + res.join('; '));
     } else {
