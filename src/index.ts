@@ -1,3 +1,5 @@
+import { NativeModules } from 'react-native';
+
 const g = global as any;
 
 export interface LevelDBIteratorI {
@@ -136,32 +138,29 @@ export class LevelDB implements LevelDBI {
   // will be lost.
   private static openPathRefs: { [name: string]: undefined | number } = {};
   private ref: undefined | number;
+  private static nativeModuleInitialized?: boolean;
 
-  // The native module may load asynchronously, in which case we have to wait for it. This method waits for the native
-  // module to appear, and returns true. If we were not able to obtain the native module, returns false.
-  public static async waitNativeModuleInitialized(): Promise<boolean> {
-    for (let i = 0; i < 2000; ++i) {
-      if (g.leveldbOpen) {
-        return true;
+  constructor(name: string, createIfMissing: boolean, errorIfExists: boolean) {
+    if (LevelDB.nativeModuleInitialized === false) {
+      throw new Error('Leveldb module initialization failed.');
+    }
+    if (LevelDB.nativeModuleInitialized === undefined) {
+      const LeveldbModule = NativeModules.Leveldb;
+      if (LeveldbModule == null || typeof LeveldbModule.install !== 'function') {
+        throw new Error('The native Leveldb module could not be found! Is it correctly installed and autolinked?');
       }
 
-      await new Promise(resolve => setTimeout(resolve, 20));  // Sleep for 20 milliseconds.
+      // Call the synchronous blocking install() function
+      if (LeveldbModule.install() !== true) {
+        throw new Error('The native Leveldb JSI bindings could not be installed!');
+      }
     }
 
-    return false;
-  }
-
-  private constructor(name: string, createIfMissing: boolean, errorIfExists: boolean) {
     if (LevelDB.openPathRefs[name] !== undefined) {
       this.ref = LevelDB.openPathRefs[name];
     } else {
       LevelDB.openPathRefs[name] = this.ref = g.leveldbOpen(name, createIfMissing, errorIfExists);
     }
-  }
-
-  static async create(name: string, createIfMissing: boolean, errorIfExists: boolean) {
-    await this.waitNativeModuleInitialized();
-    return new LevelDB(name, createIfMissing, errorIfExists);
   }
 
   close() {
@@ -228,5 +227,5 @@ export class LevelDB implements LevelDBI {
     g.leveldbDestroy(name);
   }
 
-   static readFileToBuf = g.leveldbReadFileBuf as (path: string, pos: number, len: number) => ArrayBuffer;
+  static readFileToBuf = g.leveldbReadFileBuf as (path: string, pos: number, len: number) => ArrayBuffer;
 }
