@@ -4,7 +4,7 @@ Sponsored by ![GreenTriangle](https://www.green-triangle.com/wp-content/uploads/
 Superfast React Native bindings for LevelDB:
 * 2-7x faster than AsyncStorage or react-native-sqlite-storage - try the benchmarks under example/!
 * completely synchronous, blocking API (even on slow devices, a single read or write takes 0.1ms)
-* use it with Flatbuffers to turbo charge your app - support for binary data via ArrayBuffers 
+* use it with Flatbuffers to turbo charge your app - support for binary data via ArrayBuffers
 
 ## Installation
 
@@ -23,7 +23,7 @@ const name = 'example.db';
 const createIfMissing = true;
 const errorIfExists = false;
 
-const db = await LevelDB.create(name, createIfMissing, errorIfExists);
+const db = new LevelDB(name, createIfMissing, errorIfExists);
 
 // Insert something into the database. Note that the key and the
 // value can either be strings or ArrayBuffers. 
@@ -45,7 +45,7 @@ console.log(readStringValue, readBufferValue);  // logs: value [654321]
 let iter = db.newIterator();
 for (iter.seek('key'); iter.valid(); iter.next()) {
 // There are also *Buf version to access iterators' keys & values.
-console.log(`iterating: "${iter.keyStr()}" / "${iter.valueStr()}"`);
+  console.log(`iterating: "${iter.keyStr()}" / "${iter.valueStr()}"`);
 }
 
 // You need to close iterators when you are done with them. 

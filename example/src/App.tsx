@@ -19,12 +19,12 @@ interface BenchmarkState {
 export default class App extends React.Component<{}, BenchmarkState> {
   state: BenchmarkState = {leveldbTests: []};
 
-  async componentDidMount() {
+  componentDidMount() {
     try {
       this.setState({
         leveldb: benchmarkLeveldb(),
-        leveldbExample: await leveldbExample(),
-        leveldbTests: await leveldbTests(),
+        leveldbExample: leveldbExample(),
+        leveldbTests: leveldbTests(),
       });
 
       benchmarkAsyncStorage().then(res => this.setState({asyncStorage: res}));
