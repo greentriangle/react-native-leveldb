@@ -1,5 +1,20 @@
 import { NativeModules } from 'react-native';
 
+let nativeModuleInitError: null|string = null;
+const LeveldbModule = NativeModules.Leveldb;
+if (LeveldbModule == null || typeof LeveldbModule.install !== 'function') {
+  nativeModuleInitError = 'The native Leveldb module could not be found! Is it correctly installed and autolinked?';
+}
+
+// Call the synchronous blocking install() function
+try {
+  if (LeveldbModule.install() !== true) {
+    nativeModuleInitError = 'The native Leveldb JSI bindings could not be installed!';
+  }
+} catch (e) {
+  nativeModuleInitError = e?.message || 'Leveldb.install caught error!';
+}
+
 const g = global as any;
 
 export interface LevelDBIteratorI {
@@ -138,22 +153,10 @@ export class LevelDB implements LevelDBI {
   // will be lost.
   private static openPathRefs: { [name: string]: undefined | number } = {};
   private ref: undefined | number;
-  private static nativeModuleInitialized?: boolean;
 
   constructor(name: string, createIfMissing: boolean, errorIfExists: boolean) {
-    if (LevelDB.nativeModuleInitialized === false) {
-      throw new Error('Leveldb module initialization failed.');
-    }
-    if (LevelDB.nativeModuleInitialized === undefined) {
-      const LeveldbModule = NativeModules.Leveldb;
-      if (LeveldbModule == null || typeof LeveldbModule.install !== 'function') {
-        throw new Error('The native Leveldb module could not be found! Is it correctly installed and autolinked?');
-      }
-
-      // Call the synchronous blocking install() function
-      if (LeveldbModule.install() !== true) {
-        throw new Error('The native Leveldb JSI bindings could not be installed!');
-      }
+    if (nativeModuleInitError) {
+      throw new Error(nativeModuleInitError);
     }
 
     if (LevelDB.openPathRefs[name] !== undefined) {
