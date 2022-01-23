@@ -12,6 +12,11 @@ import com.facebook.react.module.annotations.ReactModule;
 public class LeveldbModule extends ReactContextBaseJavaModule {
   public static final String NAME = "Leveldb";
 
+  static {
+    Log.i(NAME, "Loading C++ library...");
+    System.loadLibrary("reactnativeleveldb");
+  }
+
   public LeveldbModule(ReactApplicationContext reactContext) {
     super(reactContext);
   }
@@ -25,9 +30,6 @@ public class LeveldbModule extends ReactContextBaseJavaModule {
   @ReactMethod(isBlockingSynchronousMethod = true)
   public boolean install() {
     try {
-      Log.i(NAME, "Loading C++ library...");
-      System.loadLibrary("reactnativeleveldb");
-
       JavaScriptContextHolder jsContext = getReactApplicationContext().getJavaScriptContextHolder();
       String directory = getReactApplicationContext().getFilesDir().getAbsolutePath();
       Log.i(NAME, "Initializing leveldb with directory " + directory);
