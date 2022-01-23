@@ -12,7 +12,7 @@ try {
     nativeModuleInitError = 'The native Leveldb JSI bindings could not be installed!';
   }
 } catch (e) {
-  nativeModuleInitError = e?.message || 'Leveldb.install caught error!';
+  nativeModuleInitError = e instanceof Error ? e?.message : 'Leveldb.install caught error!';
 }
 
 const g = global as any;
