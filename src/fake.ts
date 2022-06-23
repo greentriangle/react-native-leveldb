@@ -12,16 +12,16 @@ function getIdx(kv: null | [ArrayBuffer, ArrayBuffer][], k: ArrayBuffer | string
 
   const pivot: number = Math.floor(start + (end - start) / 2);
   if (end - start <= 1) {
-    if (pivot < kv.length && arraybufGt(k, kv[pivot][0])) {
+    if (pivot < kv.length && arraybufGt(k, kv[pivot]![0])) {
       return end;
     } else {
       return pivot;
     }
   }
-  if (!arraybufGt(kv[pivot][0], k) && !arraybufGt(k, kv[pivot][0])) { // equality check, done as the inverse of <>
+  if (!arraybufGt(kv[pivot]![0], k) && !arraybufGt(k, kv[pivot]![0])) { // equality check, done as the inverse of <>
     return pivot;
   }
-  if (arraybufGt(kv[pivot][0], k)) {
+  if (arraybufGt(kv[pivot]![0], k)) {
     return getIdx(kv, k, start, pivot);
   } else {
     return getIdx(kv, k, pivot, end);
@@ -73,19 +73,19 @@ export class FakeLevelDBIterator implements LevelDBIteratorI {
   }
 
   keyStr(): string {
-    return toString(this.kv[this.pos!][0]);
+    return toString(this.kv[this.pos!]![0]);
   }
 
   keyBuf(): ArrayBuffer {
-    return toArraybuf(this.kv[this.pos!][0]);
+    return toArraybuf(this.kv[this.pos!]![0]);
   }
 
   valueStr(): string {
-    return toString(this.kv[this.pos!][1]);
+    return toString(this.kv[this.pos!]![1]);
   }
 
   valueBuf(): ArrayBuffer {
-    return toArraybuf(this.kv[this.pos!][1]);
+    return toArraybuf(this.kv[this.pos!]![1]);
   }
 }
 
@@ -114,10 +114,10 @@ export function arraybufGt(a: ArrayBuffer, b: ArrayBuffer): boolean {
   var keyA = new Uint8Array(a);
   var keyB = new Uint8Array(b);
   for (var i = 0 ; i < keyA.byteLength && i < keyB.byteLength ; ++i) {
-    if (keyA[i] > keyB[i]) {
+    if (keyA[i]! > keyB[i]!) {
       return true;
     }
-    if (keyA[i] < keyB[i]) {
+    if (keyA[i]! < keyB[i]!) {
       return false;
     }
   }
@@ -147,19 +147,19 @@ export class FakeLevelDB implements LevelDBI {
     // curIdx is the position at the first key in the source that is at or past `k`:
     if (curIdx == this.kv!.length) {
       this.kv!.push([toArraybuf(k), toArraybuf(v)]);
-    } else if (arraybufGt(this.kv![curIdx][0], toArraybuf(k))) {
+    } else if (arraybufGt(this.kv![curIdx]![0], toArraybuf(k))) {
       // When curIdx's key is past `k`, we add a new element at position. For example, given keys b, d, f:
       // k='a' should return 0; k='c' should return 1; k='f' should return 3.
       this.kv!.splice(curIdx, 0, [toArraybuf(k), toArraybuf(v)]);
     } else {
-      this.kv![curIdx][1] = toArraybuf(v);
+      this.kv![curIdx]![1] = toArraybuf(v);
     }
   }
 
   delete(k: ArrayBuffer | string) {
     k = toArraybuf(k);
     const curIdx = getIdx(this.kv, k);
-    if (curIdx < this.kv!.length && !arraybufGt(this.kv![curIdx][0], k) && !arraybufGt(k, this.kv![curIdx][0])) {
+    if (curIdx < this.kv!.length && !arraybufGt(this.kv![curIdx]![0], k) && !arraybufGt(k, this.kv![curIdx]![0])) {
       this.kv!.splice(curIdx, 1);
     }
   }

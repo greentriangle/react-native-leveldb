@@ -2,6 +2,7 @@ package com.reactnativeleveldb;
 
 import androidx.annotation.NonNull;
 import com.facebook.react.bridge.JavaScriptContextHolder;
+import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import android.util.Log;
@@ -10,22 +11,25 @@ import com.facebook.react.module.annotations.ReactModule;
 
 @ReactModule(name = LeveldbModule.NAME)
 public class LeveldbModule extends ReactContextBaseJavaModule {
-  public static final String NAME = "Leveldb";
+    public static final String NAME = "Leveldb";
 
-  static {
-    Log.i(NAME, "Loading C++ library...");
-    System.loadLibrary("reactnativeleveldb");
-  }
+    public LeveldbModule(ReactApplicationContext reactContext) {
+        super(reactContext);
+    }
 
-  public LeveldbModule(ReactApplicationContext reactContext) {
-    super(reactContext);
-  }
+    @Override
+    @NonNull
+    public String getName() {
+        return NAME;
+    }
 
-  @NonNull
-  @Override
-  public String getName() {
-    return NAME;
-  }
+    static {
+        try {
+            Log.i(NAME, "Loading C++ library...");
+            System.loadLibrary("reactnativeleveldb");
+        } catch (Exception ignored) {
+        }
+    }
 
   @ReactMethod(isBlockingSynchronousMethod = true)
   public boolean install() {

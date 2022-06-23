@@ -4,15 +4,15 @@ import java.nio.file.Paths
 
 buildscript {
   repositories {
-    google()
-    jcenter()
-    maven {
-      url "https://plugins.gradle.org/m2/"
-    }
+      google()
+      mavenCentral()
+      maven {
+        url "https://plugins.gradle.org/m2/"
+      }
   }
 
   dependencies {
-    classpath 'com.android.tools.build:gradle:4.2.2'
+    classpath 'com.android.tools.build:gradle:3.5.3'
     classpath 'de.undercouch:gradle-download-task:4.1.2'
   }
 }
@@ -34,7 +34,7 @@ android {
   ndkVersion getExtOrDefault('ndkVersion')
 
   defaultConfig {
-    minSdkVersion 21
+    minSdkVersion getExtOrIntegerDefault('minSdkVersion')
     targetSdkVersion getExtOrIntegerDefault('targetSdkVersion')
     versionCode 1
     versionName "1.0"
@@ -146,7 +146,7 @@ repositories {
   if (!found) {
     throw new GradleException(
       "${project.name}: unable to locate React Native android sources. " +
-        "Ensure you have you installed React Native as a dependency in your project and try again."
+      "Ensure you have you installed React Native as a dependency in your project and try again."
     )
   }
 }

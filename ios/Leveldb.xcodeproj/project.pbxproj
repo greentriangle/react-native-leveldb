@@ -7,8 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+
+		5E46D8CD2428F78900513E24 /* example.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5E46D8CB2428F78900513E24 /* example.cpp */; };
 		5E555C0D2413F4C50049A1A2 /* Leveldb.mm in Sources */ = {isa = PBXBuildFile; fileRef = B3E7B5891CC2AC0600A0062D /* Leveldb.mm */; };
-		CC900BDF258BB44600E5DE31 /* react-native-leveldb.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CC900BDD258BB44600E5DE31 /* react-native-leveldb.cpp */; };
+
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -25,9 +27,11 @@
 
 /* Begin PBXFileReference section */
 		134814201AA4EA6300B7C361 /* libLeveldb.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libLeveldb.a; sourceTree = BUILT_PRODUCTS_DIR; };
+
+		5E46D8CB2428F78900513E24 /* example.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = example.cpp; path = ../cpp/example.cpp; sourceTree = "<group>"; };
+		5E46D8CC2428F78900513E24 /* example.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = example.h; path = ../cpp/example.h; sourceTree = "<group>"; };
 		B3E7B5891CC2AC0600A0062D /* Leveldb.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = Leveldb.mm; sourceTree = "<group>"; };
-		CC900BDD258BB44600E5DE31 /* react-native-leveldb.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "react-native-leveldb.cpp"; path = "../cpp/react-native-leveldb.cpp"; sourceTree = "<group>"; };
-		CC900BDE258BB44600E5DE31 /* react-native-leveldb.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "react-native-leveldb.h"; path = "../cpp/react-native-leveldb.h"; sourceTree = "<group>"; };
+
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -52,9 +56,11 @@
 		58B511D21A9E6C8500147676 = {
 			isa = PBXGroup;
 			children = (
-				CC900BDD258BB44600E5DE31 /* react-native-leveldb.cpp */,
-				CC900BDE258BB44600E5DE31 /* react-native-leveldb.h */,
+
+				5E46D8CB2428F78900513E24 /* example.cpp */,
+				5E46D8CC2428F78900513E24 /* example.h */,
 				B3E7B5891CC2AC0600A0062D /* Leveldb.mm */,
+
 				134814211AA4EA7D00B7C361 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -116,8 +122,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+
+				5E46D8CD2428F78900513E24 /* example.cpp in Sources */,
 				5E555C0D2413F4C50049A1A2 /* Leveldb.mm in Sources */,
-				CC900BDF258BB44600E5DE31 /* react-native-leveldb.cpp in Sources */,
+
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -152,6 +160,7 @@
 				COPY_PHASE_STRIP = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				"EXCLUDED_ARCHS[sdk=*]" = arm64;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -202,6 +211,7 @@
 				COPY_PHASE_STRIP = YES;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				"EXCLUDED_ARCHS[sdk=*]" = arm64;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -230,9 +240,7 @@
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = Leveldb;
 				SKIP_INSTALL = YES;
-				SWIFT_OBJC_BRIDGING_HEADER = "Leveldb-Bridging-Header.h";
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 5.0;
+
 			};
 			name = Debug;
 		};
@@ -249,8 +257,7 @@
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = Leveldb;
 				SKIP_INSTALL = YES;
-				SWIFT_OBJC_BRIDGING_HEADER = "Leveldb-Bridging-Header.h";
-				SWIFT_VERSION = 5.0;
+
 			};
 			name = Release;
 		};

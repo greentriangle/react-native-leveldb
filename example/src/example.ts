@@ -85,14 +85,14 @@ export function leveldbTests() {
   try {
     (global as any).leveldbTestException();
     s.push('leveldbTestException: FAILED! No exception.');
-  } catch (e) {
+  } catch (e: any) {
     s.push('leveldbTestException: ' + e.message.slice(0, 20));
   }
 
   try {
     (global as any).leveldbPut(-1);
     s.push('leveldbPut exception (out of range): FAILED! No exception.');
-  } catch (e) {
+  } catch (e: any) {
     s.push('leveldbPut exception (out of range): ' + e.message.slice(0, 100));
   }
 
@@ -103,7 +103,7 @@ export function leveldbTests() {
     } else {
       s.push('leveldbTestMerge(true) succeeded');
     }
-  } catch (e) {
+  } catch (e: any) {
     s.push('leveldbTestMerge(true) threw: ' + e.message);
   }
 
@@ -114,7 +114,7 @@ export function leveldbTests() {
     } else {
       s.push('leveldbTestMerge(false) succeeded');
     }
-  } catch (e) {
+  } catch (e: any) {
     s.push('leveldbTestMerge(false) threw: ' + e.message);
   }
 
