@@ -1,4 +1,4 @@
-import type {LevelDBI, LevelDBIteratorI} from "./index";
+import type { LevelDBI, LevelDBIteratorI } from "./index";
 
 // Return the position at the first key in the source that is at or past `k`.
 function getIdx(kv: null | [ArrayBuffer, ArrayBuffer][], k: ArrayBuffer | string, start?: number, end?: number): number {
@@ -30,7 +30,7 @@ function getIdx(kv: null | [ArrayBuffer, ArrayBuffer][], k: ArrayBuffer | string
 
 export class FakeLevelDBIterator implements LevelDBIteratorI {
   private kv: [ArrayBuffer, ArrayBuffer][];
-  private pos: undefined|number;
+  private pos: undefined | number;
 
   constructor(db: FakeLevelDB) {
     if (!db.kv) {
@@ -87,6 +87,10 @@ export class FakeLevelDBIterator implements LevelDBIteratorI {
   valueBuf(): ArrayBuffer {
     return toArraybuf(this.kv[this.pos!]![1]);
   }
+  compareKey(target: string | ArrayBuffer): number {
+    const arrTarget = toArraybuf(target);
+    return (arraybufGt(this.kv[this.pos!]![0], arrTarget) ? 1 : arraybufLt(this.kv[this.pos!]![0], target as ArrayBuffer) ? -1 : 0);
+  }
 }
 
 // `global as any` is a hack to get around this issue:
@@ -113,7 +117,7 @@ export function toArraybuf(str: string | ArrayBuffer): ArrayBuffer {
 export function arraybufGt(a: ArrayBuffer, b: ArrayBuffer): boolean {
   var keyA = new Uint8Array(a);
   var keyB = new Uint8Array(b);
-  for (var i = 0 ; i < keyA.byteLength && i < keyB.byteLength ; ++i) {
+  for (var i = 0; i < keyA.byteLength && i < keyB.byteLength; ++i) {
     if (keyA[i]! > keyB[i]!) {
       return true;
     }
@@ -124,11 +128,26 @@ export function arraybufGt(a: ArrayBuffer, b: ArrayBuffer): boolean {
 
   return keyA.byteLength > keyB.byteLength;
 }
+export function arraybufLt(a: ArrayBuffer, b: ArrayBuffer): boolean {
+  var keyA = new Uint8Array(a);
+  var keyB = new Uint8Array(b);
+  for (var i = 0; i < keyA.byteLength && i < keyB.byteLength; ++i) {
+    if (keyA[i]! < keyB[i]!) {
+      return true;
+    }
+    if (keyA[i]! > keyB[i]!) {
+      return false;
+    }
+  }
+
+  return keyA.byteLength < keyB.byteLength;
+}
+
 
 export class FakeLevelDB implements LevelDBI {
   // The in-mem storage, as a sorted Array of KVs. The keys & values are stored as ArrayBuffers, which has the advantage
   // that it's very close to how LevelDB works.
-  public kv: null|[ArrayBuffer, ArrayBuffer][];
+  public kv: null | [ArrayBuffer, ArrayBuffer][];
 
   constructor() {
     this.kv = [];

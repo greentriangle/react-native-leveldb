@@ -59,6 +59,12 @@ export interface LevelDBIteratorI {
   // REQUIRES: Valid()
   valueStr(): string;
   valueBuf(): ArrayBuffer;
+
+  /**
+   * Executes a comparison using the underlying iterator's Compare(Slice ...) method
+   * @param target 
+   */
+  compareKey(target: ArrayBuffer | string): number;
 }
 
 export interface LevelDBI {
@@ -144,6 +150,9 @@ export class LevelDBIterator implements LevelDBIteratorI {
 
   valueBuf(): ArrayBuffer {
     return g.leveldbIteratorValueBuf(this.ref);
+  }
+  compareKey(target: ArrayBuffer | string) : number {
+    return g.leveldbIteratorKeyCompare(this.ref, target);
   }
 }
 

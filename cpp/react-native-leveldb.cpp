@@ -327,6 +327,27 @@ void installLeveldb(jsi::Runtime& jsiRuntime, std::string documentDir) {
       }
   );
   jsiRuntime.global().setProperty(jsiRuntime, "leveldbIteratorKeyStr", std::move(leveldbIteratorKeyStr));
+  
+  auto leveldbIteratorKeyCompare = jsi::Function::createFromHostFunction
+  (
+   jsiRuntime,
+   jsi::PropNameID::forAscii(jsiRuntime, "leveldbIteratorKeyCompare"),
+   2,  // iterators index, comparison target
+   [](jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
+     leveldb::Iterator* iterator = valueToIterator(arguments[0]);
+     std::string target;
+     if (!valueToString(runtime, arguments[1], &target)) {
+       throw jsi::JSError(runtime, "leveldbIteratorKeyCompare/invalid-params");
+     }
+     // Compare with input comparison string
+     int comparisonResult = iterator->key().compare(target);
+     if (!iterator) {
+       throw jsi::JSError(runtime, "leveldbIteratorKeyCompare/invalid-params");
+     }
+     return jsi::Value(comparisonResult);
+   }
+   );
+  jsiRuntime.global().setProperty(jsiRuntime, "leveldbIteratorKeyCompare", std::move(leveldbIteratorKeyCompare));
 
   auto leveldbIteratorValueStr = jsi::Function::createFromHostFunction(
       jsiRuntime,
