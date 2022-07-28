@@ -44,7 +44,7 @@ export async function benchmarkAsyncStorage(): Promise<BenchmarkResults> {
   console.info('Clearing AsyncStorage');
   try {
     await AsyncStorage.clear();
-  } catch (e) {
+  } catch (e: any) {
     if (!e?.message?.includes('Failed to delete storage directory')) {
       throw e;
     }
