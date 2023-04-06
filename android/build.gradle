@@ -12,8 +12,8 @@ buildscript {
   }
 
   dependencies {
-    classpath 'com.android.tools.build:gradle:3.5.3'
-    classpath 'de.undercouch:gradle-download-task:4.1.2'
+    classpath 'com.android.tools.build:gradle:7.2.2'
+    classpath 'de.undercouch:gradle-download-task:5.0.1'
   }
 }
 
@@ -26,6 +26,16 @@ def getExtOrDefault(name) {
 
 def getExtOrIntegerDefault(name) {
   return rootProject.ext.has(name) ? rootProject.ext.get(name) : (project.properties['LevelDB_' + name]).toInteger()
+}
+
+def resolveBuildType() {
+    def buildType = "debug"
+    tasks.all({ task ->
+        if (task.name == "buildCMakeRelease") {
+            buildType = "release"
+        }
+    })
+    return buildType
 }
 
 android {
@@ -82,8 +92,8 @@ android {
 }
 
 repositories {
-  mavenCentral()
   google()
+  mavenCentral()
 
   def found = false
   def defaultDir = null
@@ -160,7 +170,13 @@ dependencies {
   //noinspection GradleDynamicVersion
   extractJNI("com.facebook.fbjni:fbjni:+")
 
-  def rnAAR = fileTree("${rootDir}/../node_modules/react-native/android").matching({ it.include "**/**/*.aar" }).singleFile
+
+  def rnAarMatcher = "**/react-native/**/*${resolveBuildType()}.aar"
+  // if (REACT_NATIVE_VERSION < 69) {
+  //   rnAarMatcher = "**/**/*.aar"
+  // }
+
+  def rnAAR = fileTree("${rootDir}/../node_modules/react-native/android").matching({ it.include rnAarMatcher }).singleFile
   extractJNI(files(rnAAR))
 }
 
@@ -191,7 +207,9 @@ task createNativeDepsDirectories {
 }
 
 task downloadBoost(dependsOn: createNativeDepsDirectories, type: Download) {
-  src("https://github.com/react-native-community/boost-for-react-native/releases/download/v${BOOST_VERSION.replace("_", ".")}-0/boost_${BOOST_VERSION}.tar.gz")
+  def transformedVersion = BOOST_VERSION.replace("_", ".")
+  def srcUrl = "https://boostorg.jfrog.io/artifactory/main/release/${transformedVersion}/source/boost_${BOOST_VERSION}.tar.gz"
+  src(srcUrl)
   onlyIfNewer(true)
   overwrite(false)
   dest(boost_file)
