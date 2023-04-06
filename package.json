@@ -67,11 +67,11 @@
     "pod-install": "^0.1.0",
     "prettier": "^2.0.5",
     "react": "18.1.0",
-    "react-native": "0.70.0",
+    "react-native": "0.70.8",
     "react-native-builder-bob": "^0.18.2",
     "release-it": "^15.0.0",
     "typescript": "^4.5.2",
-    "metro-react-native-babel-preset": "^0.72.1"
+    "metro-react-native-babel-preset": "^0.72.3"
   },
   "resolutions": {
     "@types/react": "17.0.21"
