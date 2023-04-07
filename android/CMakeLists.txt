@@ -48,11 +48,14 @@ find_library(
         NO_CMAKE_FIND_ROOT_PATH
 )
 
+find_package(ReactAndroid REQUIRED CONFIG)
+
 target_link_libraries(
         reactnativeleveldb
         leveldb
         ${log-lib}
-        ${JSI_LIB}
-        ${REACT_NATIVE_JNI_LIB}
+        # ${JSI_LIB}
+        # ${REACT_NATIVE_JNI_LIB}
+        ReactAndroid::jsi   # <-- JSI
         android
 )
