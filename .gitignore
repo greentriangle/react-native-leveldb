@@ -63,3 +63,7 @@ lib/
 android/.cxx
 android/cmake-build-debug/
 .cxx/
+
+
+# Temporary files created by Metro to check the health of the file watcher
+example/.metro-health-check*
