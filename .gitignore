@@ -67,3 +67,4 @@ android/cmake-build-debug/
 
 # Temporary files created by Metro to check the health of the file watcher
 example/.metro-health-check*
+example/ios/.xcode.env
