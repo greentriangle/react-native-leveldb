@@ -49,7 +49,7 @@ android {
   compileSdkVersion safeExtGet('compileSdkVersion', 28)
   def agpVersion = com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
   if (agpVersion.tokenize('.')[0].toInteger() >= 7) {
-    namespace "com.shopify.reactnative.skia"
+    namespace "com.reactnativeleveldb"
   }
   
   // Used to override the NDK path/version on internal CI or by allowing
