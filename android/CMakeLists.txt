@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.9.0)
+project(reactnativeleveldb)
 
 set (PACKAGE_NAME "react-native-leveldb")
 set (BUILD_DIR ${CMAKE_SOURCE_DIR}/build)
