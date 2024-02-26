@@ -1,4 +1,4 @@
-import {LevelDB} from "react-native-leveldb";
+import {LevelDB, LevelDBWriteBatch} from "react-native-leveldb";
 import {bufEquals, getRandomString} from "./test-util";
 
 export function leveldbExample(): boolean {
@@ -80,8 +80,75 @@ export function leveldbTestMerge(batchMerge: boolean) {
   return errors;
 }
 
+function leveldbTestWriteBatch() {
+  let nameDst = getRandomString(32) + '.db';
+  console.info('leveldbTestWriteBatch: Opening DB', nameDst);
+  const dbDst = new LevelDB(nameDst, true, true);
+
+  const writeBatch = new LevelDBWriteBatch();
+  const key1 = new Uint8Array([1, 2, 3]);
+  const value1 = new Uint8Array([4, 5, 6]);
+  const key2 = new Uint8Array([3, 2, 1]);
+  const value2 = new Uint8Array([6, 5, 4]);
+
+  writeBatch.put(key1.buffer, value1.buffer);
+  writeBatch.put(key2.buffer, value2.buffer);
+  dbDst.write(writeBatch);
+  writeBatch.close();
+
+  const errors: string[] = []
+  if (!bufEquals(dbDst.getBuf(key1.buffer)!, value1)) {
+    errors.push(`leveldbTestWriteBatch: key1 didn't have expected value: ${new Uint8Array(dbDst.getBuf(key1.buffer)!)}`);
+  }
+  if (!bufEquals(dbDst.getBuf(key2.buffer)!, value2)) {
+    errors.push(`leveldbTestWriteBatch: key2 didn't have expected value: ${new Uint8Array(dbDst.getBuf(key2.buffer)!)}`);
+  }
+
+  try {
+    writeBatch.put(key2.buffer, value2.buffer);
+    errors.push(`leveldbTestWriteBatch: FAILED! No exception after close.`);
+  } catch(e: any) {
+    // Expected an exception
+  }
+
+  const writeBatchDelete = new LevelDBWriteBatch();
+  writeBatchDelete.delete(key1.buffer);
+  writeBatchDelete.delete(key2.buffer);
+  dbDst.write(writeBatchDelete);
+  writeBatchDelete.close();
+
+  if (dbDst.getBuf(key1.buffer) !== null) {
+    errors.push(`leveldbTestWriteBatch: key1 didn't have expected value: ${new Uint8Array(dbDst.getBuf(key1.buffer)!)}`);
+  }
+  if (dbDst.getBuf(key2.buffer) !== null) {
+    errors.push(`leveldbTestWriteBatch: key2 didn't have expected value: ${new Uint8Array(dbDst.getBuf(key2.buffer)!)}`);
+  }
+
+  try {
+    writeBatch.delete(key2.buffer);
+    errors.push(`leveldbTestWriteBatch: FAILED! No exception after close.`);
+  } catch(e: any) {
+    // Expected an exception
+  }
+
+  return errors
+}
+
+
 export function leveldbTests() {
   let s: string[] = [];
+
+  try {
+    const res = leveldbTestWriteBatch();
+    if (res.length) {
+      s.push('leveldbTestWriteBatch() failed with:' + res.join('; '));
+    } else {
+      s.push('leveldbTestWriteBatch() succeeded');
+    }
+  } catch (e: any) {
+    s.push('leveldbTestWriteBatch() threw: ' + e.message);
+  }
+
   try {
     (global as any).leveldbTestException();
     s.push('leveldbTestException: FAILED! No exception.');

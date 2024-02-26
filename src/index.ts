@@ -67,6 +67,18 @@ export interface LevelDBIteratorI {
   compareKey(target: ArrayBuffer | string): number;
 }
 
+export interface LevelDBWriteBatchI {
+  // Set the database entry for "k" to "v".
+  put(k: ArrayBuffer | string, v: ArrayBuffer | string): void;
+
+  // Remove the database entry (if any) for "key".
+  // It is not an error if "key" did not exist in the database.
+  delete(k: ArrayBuffer | string): void;
+
+  // Drops the reference to this WriteBatch.
+  close(): void;
+}
+
 export interface LevelDBI {
   // Close this ref to LevelDB.
   close(): void;
@@ -95,6 +107,27 @@ export interface LevelDBI {
   // Caller should delete the iterator when it is no longer needed.
   // The returned iterator should be closed before this db is closed.
   newIterator(): LevelDBIteratorI;
+}
+
+export class LevelDBWriteBatch implements LevelDBWriteBatchI {
+  ref: number;
+
+  constructor() {
+    this.ref = g.leveldbNewWriteBatch();
+  }
+
+  put(k: ArrayBuffer | string, v: ArrayBuffer | string) {
+    g.leveldbWriteBatchPut(this.ref, k, v);
+  }
+
+  delete(k: ArrayBuffer | string) {
+    g.leveldbWriteBatchDelete(this.ref, k);
+  }
+
+  close() {
+    g.leveldbWriteBatchClose(this.ref);
+    this.ref = -1;
+  }
 }
 
 export class LevelDBIterator implements LevelDBIteratorI {
@@ -210,6 +243,10 @@ export class LevelDB implements LevelDBI {
       throw new Error('LevelDB.newIterator: could not create iterator, the DB was closed!');
     }
     return new LevelDBIterator(this.ref);
+  }
+
+  write(batch: LevelDBWriteBatch) {
+    g.leveldbWriteWriteBatch(this.ref, batch.ref);
   }
 
   // Merges the data from another LevelDB into this one. All keys from src will be written into this LevelDB,
