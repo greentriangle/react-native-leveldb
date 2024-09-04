@@ -12,6 +12,7 @@ using namespace facebook;
 // TODO(savv): consider re-using unique_ptrs, if they are empty.
 std::vector<std::unique_ptr<leveldb::DB>> dbs;
 std::vector<std::unique_ptr<leveldb::Iterator>> iterators;
+std::vector<std::unique_ptr<leveldb::WriteBatch>> batches;
 
 // Returns false if the passed value is not a string or an ArrayBuffer.
 bool valueToString(jsi::Runtime& runtime, const jsi::Value& value, std::string* str) {
@@ -61,6 +62,24 @@ leveldb::Iterator* valueToIterator(const jsi::Value& value) {
   }
 
   return iterators[idx].get();
+}
+
+leveldb::WriteBatch* valueToWriteBatch(const jsi::Value& value, std::string* err) {
+  if (!value.isNumber()) {
+    *err = "valueToWriteBatch/param-not-a-number";
+    return nullptr;
+  }
+  int idx = (int)value.getNumber();
+  if (idx < 0 || idx >= batches.size()) {
+    *err = "valueToWriteBatch/idx-out-of-range";
+    return nullptr;
+  }
+  if (!batches[idx].get()) {
+    *err = "valueToWriteBatch/null";
+    return nullptr;
+  }
+
+  return batches[idx].get();
 }
 
 void installLeveldb(jsi::Runtime& jsiRuntime, std::string documentDir) {
@@ -362,6 +381,108 @@ void installLeveldb(jsi::Runtime& jsiRuntime, std::string documentDir) {
       }
   );
   jsiRuntime.global().setProperty(jsiRuntime, "leveldbIteratorValueStr", std::move(leveldbIteratorValueStr));
+
+  auto leveldbNewWriteBatch = jsi::Function::createFromHostFunction(
+      jsiRuntime,
+      jsi::PropNameID::forAscii(jsiRuntime, "leveldbNewWriteBatch"),
+      0,
+      [](jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
+        batches.push_back(std::unique_ptr<leveldb::WriteBatch>(new leveldb::WriteBatch()));
+        return jsi::Value((int)batches.size() - 1);
+      }
+  );
+  jsiRuntime.global().setProperty(jsiRuntime, "leveldbNewWriteBatch", std::move(leveldbNewWriteBatch));
+
+  auto leveldbWriteWriteBatch = jsi::Function::createFromHostFunction(
+      jsiRuntime,
+      jsi::PropNameID::forAscii(jsiRuntime, "leveldbWriteWriteBatch"),
+      2,  // dbs index, batches index
+      [](jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
+        std::string dbErr;
+        leveldb::DB* db = valueToDb(arguments[0], &dbErr);
+        if (!db) {
+          throw jsi::JSError(runtime, "leveldbWriteWriteBatch/" + dbErr);
+        }
+
+        std::string batchErr;
+        leveldb::WriteBatch* batch = valueToWriteBatch(arguments[1], &batchErr);
+        if (!batch) {
+          throw jsi::JSError(runtime, "leveldbWriteBatchPut/" + batchErr);
+        }
+
+        db->Write(leveldb::WriteOptions(), batch);
+
+        return nullptr;
+      }
+  );
+  jsiRuntime.global().setProperty(jsiRuntime, "leveldbWriteWriteBatch", std::move(leveldbWriteWriteBatch));
+
+  auto leveldbWriteBatchPut = jsi::Function::createFromHostFunction(
+      jsiRuntime,
+      jsi::PropNameID::forAscii(jsiRuntime, "leveldbWriteBatchPut"),
+      3,  // batches index, key, value
+      [](jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
+        std::string key, value;
+        std::string batchErr;
+        leveldb::WriteBatch* batch = valueToWriteBatch(arguments[0], &batchErr);
+        if (!batch) {
+          throw jsi::JSError(runtime, "leveldbWriteBatchPut/" + batchErr);
+        }
+        if (!valueToString(runtime, arguments[1], &key) || !valueToString(runtime, arguments[2], &value)) {
+          throw jsi::JSError(runtime, "leveldbWriteBatchPut/invalid-params");
+        }
+
+        batch->Put(key, value);
+
+        return nullptr;
+      }
+  );
+  jsiRuntime.global().setProperty(jsiRuntime, "leveldbWriteBatchPut", std::move(leveldbWriteBatchPut));
+
+  auto leveldbWriteBatchDelete = jsi::Function::createFromHostFunction(
+      jsiRuntime,
+      jsi::PropNameID::forAscii(jsiRuntime, "leveldbWriteBatchDelete"),
+      2,  // batches index, key
+      [](jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
+        std::string key, value;
+        std::string batchErr;
+        leveldb::WriteBatch* batch = valueToWriteBatch(arguments[0], &batchErr);
+        if (!batch) {
+          throw jsi::JSError(runtime, "leveldbWriteBatchDelete/" + batchErr);
+        }
+        if (!valueToString(runtime, arguments[1], &key)) {
+          throw jsi::JSError(runtime, "leveldbWriteBatchDelete/invalid-params");
+        }
+
+        batch->Delete(key);
+
+        return nullptr;
+      }
+  );
+  jsiRuntime.global().setProperty(jsiRuntime, "leveldbWriteBatchDelete", std::move(leveldbWriteBatchDelete));
+
+  auto leveldbWriteBatchClose = jsi::Function::createFromHostFunction(
+      jsiRuntime,
+      jsi::PropNameID::forAscii(jsiRuntime, "leveldbWriteBatchClose"),
+      1,  // batches index
+      [](jsi::Runtime& runtime, const jsi::Value& thisValue, const jsi::Value* arguments, size_t count) -> jsi::Value {
+        std::string batchErr;
+        leveldb::WriteBatch* batch = valueToWriteBatch(arguments[0], &batchErr);
+        if (!batch) {
+          throw jsi::JSError(runtime, "leveldbWriteBatchClose/" + batchErr);
+        }
+
+        int idx = (int)arguments[0].getNumber();
+        if (idx < 0 || idx >= batches.size() || !batches[idx].get()) {
+          throw jsi::JSError(runtime, "leveldbWriteBatchClose/idx-out-of-bounds");
+        }
+
+        batches[idx].reset();
+
+        return nullptr;
+      }
+  );
+  jsiRuntime.global().setProperty(jsiRuntime, "leveldbWriteBatchClose", std::move(leveldbWriteBatchClose));
 
   auto leveldbGetStr = jsi::Function::createFromHostFunction(
       jsiRuntime,
