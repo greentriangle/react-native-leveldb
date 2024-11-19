@@ -54,7 +54,7 @@ android {
       buildConfig true
     }
   }
-  
+
   // Used to override the NDK path/version on internal CI or by allowing
   // users to customize the NDK path/version from their root project (e.g. for M1 support)
   if (rootProject.hasProperty('ndkPath')) {
@@ -76,7 +76,7 @@ android {
     buildConfigField 'boolean', 'IS_NEW_ARCHITECTURE_ENABLED', isNewArchitectureEnabled().toString()
     externalNativeBuild {
       cmake {
-        cppFlags '-O2 -frtti -fexceptions -Wall -Wno-unused-variable -fstack-protector-all'
+        cppFlags '-O2 -frtti -fexceptions -Wall -Wno-unused-variable -Wno-unused-but-set-variable -fstack-protector-all'
         arguments '-DANDROID_STL=c++_shared'
         abiFilters(*reactNativeArchitectures())
       }
