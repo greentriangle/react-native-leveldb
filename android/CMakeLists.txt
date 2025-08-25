@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.9.0)
 project(reactnativeleveldb)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 set (PACKAGE_NAME "react-native-leveldb")
 set (BUILD_DIR ${CMAKE_SOURCE_DIR}/build)
 
@@ -25,7 +29,7 @@ add_library(reactnativeleveldb  # Library name
 
 set_target_properties(
         reactnativeleveldb PROPERTIES
-        CXX_STANDARD 14
+        CXX_STANDARD 17
         CXX_EXTENSIONS OFF
         POSITION_INDEPENDENT_CODE ON
 )
