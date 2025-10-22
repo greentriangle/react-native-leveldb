@@ -12,6 +12,9 @@ set (LEVELDB_BUILD_TESTS OFF CACHE INTERNAL "Really don't build LevelDB tests") 
 set (LEVELDB_BUILD_BENCHMARKS OFF CACHE INTERNAL "Really don't build LevelDB benchmarks")
 set (LEVELDB_INSTALL OFF CACHE INTERNAL "Really don't install LevelDB")
 
+# Enables 16KB page size support
+set(CMAKE_ANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES ON)
+
 add_subdirectory(../cpp/leveldb leveldb)
 
 include_directories(
